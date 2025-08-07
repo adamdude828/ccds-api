@@ -142,3 +142,29 @@ variable "sshKeyData" {
 variable "validationKey" {
   type = string
 }
+
+# Azure Front Door variables
+variable "frontdoor_profile_name" {
+  type        = string
+  description = "Name of the Azure Front Door profile"
+}
+
+variable "frontdoor_endpoint_name" {
+  type        = string
+  description = "Name of the Azure Front Door endpoint"
+}
+
+variable "frontdoor_origin_group_name" {
+  type        = string
+  description = "Name of the Azure Front Door origin group"
+}
+
+variable "frontdoor_origin_name" {
+  type        = string
+  description = "Name of the Azure Front Door origin"
+}
+
+variable "frontdoor_route_name" {
+  type        = string
+  description = "Name of the Azure Front Door route"
+}

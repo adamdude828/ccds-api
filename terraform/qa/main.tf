@@ -489,3 +489,118 @@ resource "azurerm_bastion_host" "bastion" {
     public_ip_address_id = azurerm_public_ip.bastionPubIpName.id
   }
 }
+
+# Azure Front Door Standard Profile
+resource "azurerm_cdn_frontdoor_profile" "frontdoor" {
+  name                = var.frontdoor_profile_name
+  resource_group_name = azurerm_resource_group.rg.name
+  sku_name           = "Standard_AzureFrontDoor"
+
+  tags = {
+    Environment = "qa"
+    Project     = "ccds"
+  }
+}
+
+# Origin Group for Application Gateway
+resource "azurerm_cdn_frontdoor_origin_group" "agw_origin_group" {
+  name                     = var.frontdoor_origin_group_name
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.frontdoor.id
+  session_affinity_enabled = true
+
+  load_balancing {
+    sample_size                 = 4
+    successful_samples_required = 3
+  }
+
+  health_probe {
+    path                = "/"
+    request_type        = "HEAD"
+    protocol            = "Https"
+    interval_in_seconds = 100
+  }
+}
+
+# Origin pointing to Application Gateway
+resource "azurerm_cdn_frontdoor_origin" "agw_origin" {
+  name                          = var.frontdoor_origin_name
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.agw_origin_group.id
+
+  enabled                        = true
+  host_name                     = azurerm_public_ip.agwPubIpName.fqdn
+  http_port                     = 80
+  https_port                    = 443
+  origin_host_header            = azurerm_public_ip.agwPubIpName.fqdn
+  priority                      = 1
+  weight                        = 1000
+  certificate_name_check_enabled = true
+}
+
+# Front Door Endpoint
+resource "azurerm_cdn_frontdoor_endpoint" "endpoint" {
+  name                     = var.frontdoor_endpoint_name
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.frontdoor.id
+}
+
+# Route for the endpoint
+resource "azurerm_cdn_frontdoor_route" "route" {
+  name                          = var.frontdoor_route_name
+  cdn_frontdoor_endpoint_id     = azurerm_cdn_frontdoor_endpoint.endpoint.id
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.agw_origin_group.id
+  cdn_frontdoor_origin_ids      = [azurerm_cdn_frontdoor_origin.agw_origin.id]
+
+  supported_protocols    = ["Http", "Https"]
+  patterns_to_match     = ["/*"]
+  forwarding_protocol   = "HttpsOnly"
+  link_to_default_domain = true
+  https_redirect_enabled = true
+
+  cache {
+    query_string_caching_behavior = "IgnoreQueryString"
+    query_strings                = []
+    compression_enabled          = true
+    content_types_to_compress = [
+      "application/eot",
+      "application/font",
+      "application/font-sfnt",
+      "application/javascript",
+      "application/json",
+      "application/opentype",
+      "application/otf",
+      "application/pkcs7-mime",
+      "application/truetype",
+      "application/ttf",
+      "application/vnd.ms-fontobject",
+      "application/xhtml+xml",
+      "application/xml",
+      "application/xml+rss",
+      "application/x-font-opentype",
+      "application/x-font-truetype",
+      "application/x-font-ttf",
+      "application/x-httpd-cgi",
+      "application/x-javascript",
+      "application/x-mpegurl",
+      "application/x-opentype",
+      "application/x-otf",
+      "application/x-perl",
+      "application/x-ttf",
+      "font/eot",
+      "font/ttf",
+      "font/otf",
+      "font/opentype",
+      "image/svg+xml",
+      "text/css",
+      "text/csv",
+      "text/html",
+      "text/javascript",
+      "text/js",
+      "text/plain",
+      "text/richtext",
+      "text/tab-separated-values",
+      "text/xml",
+      "text/x-script",
+      "text/x-component",
+      "text/x-java-source"
+    ]
+  }
+}

@@ -42,3 +42,10 @@ mysqlAdmin = "#{mysqladmin}#"
 mysqlAdminPassword = "#{mysqlAdminPassword}#"
 vmAdminPassword = "#{vmAdminPassword}#"
 sshKeyData = "#{bastionPubKey}#"
+
+# Azure Front Door configuration
+frontdoor_profile_name = "afd-pub-ccds-php-qa-w"
+frontdoor_endpoint_name = "ccds-qa-endpoint"
+frontdoor_origin_group_name = "agw-origin-group"
+frontdoor_origin_name = "agw-origin"
+frontdoor_route_name = "default-route"
