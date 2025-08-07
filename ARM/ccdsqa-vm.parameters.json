@@ -1,0 +1,63 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmName1": {
+            "value": "vm-pub-ccds-php-qa-w-1" 
+        },
+        "vmAdminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-qa-w"
+                },
+                "secretName": "vmAdminPassword"
+            }
+        },
+        "sshKeyData": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-qa-w"
+                },
+                "secretName": "bastionPubKey"
+            }
+        },
+        "chefExtension": {
+            "value": "qaChefExtension"
+        },
+        "chefUrl": {
+            "value": "https://chef.challenger.video/organizations/challenger"
+        },
+        "chefEnv": {
+            "value": "ccds-qa"
+        },
+        "validationClientName": {
+            "value": "challenger-validator"
+        },
+        "runlist": {
+            "value": "role[ccds_qa]"
+        },
+        "validationKey": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-qa-w"
+                },
+                "secretName": "validationKey-arm"
+            }
+        },
+        "vmName2": {
+            "value": "vm-pub-ccds-php-qa-w-2" 
+        },
+        "networkInterface1ID": {
+            "value": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourceGroups/rg-pub-ccds-php-m-qa-w/providers/Microsoft.Network/networkInterfaces/nic-vm-pub-ccds-php-qa-w-1"
+        },
+        "networkInterface2ID": {
+            "value": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourceGroups/rg-pub-ccds-php-m-qa-w/providers/Microsoft.Network/networkInterfaces/nic-vm-pub-ccds-php-qa-w-2"
+        },
+        "vmPubIp1Name":{
+            "value": "pip-vm-pub-ccds-php-qa-w-1"
+        },
+        "vmPubIp2Name":{
+            "value": "pip-vm-pub-ccds-php-qa-w-2"
+        }
+    }
+}

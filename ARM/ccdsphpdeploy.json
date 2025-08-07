@@ -1,0 +1,1095 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "redisName": {
+            "type": "string"
+        },
+        "networkSecurityGroup": {
+            "type": "string"
+        },
+        "redisPrivateLink": {
+            "type": "string"
+        },
+        "vnetName": {
+            "type": "string"
+        },
+        "subnetName1": {
+            "type": "string"
+        },
+        "subnetName2": {
+            "type": "string"
+        },
+        "subnetName3": {
+            "type": "string"
+        },
+        "subnetName4": {
+            "type": "string"
+        },
+        "subnetPrefix1": {
+            "type": "string"
+        },
+        "subnetPrefix2": {
+            "type": "string"
+        },
+        "subnetPrefix3": {
+            "type": "string"
+        },
+        "subnetPrefix4": {
+            "type": "string"
+        },
+        "redisPrivIp": {
+            "type": "string"
+        },
+        "agwPubIpName": {
+            "type": "string"
+        },
+        "bastionPubIpName": {
+            "type": "string"
+        },
+        "vmPubIp1Name": {
+            "type": "string"
+        },
+        "vmPubIp2Name": {
+            "type": "string"
+        },
+        "agwName": {
+            "type": "string"
+        },
+        "agwFqdn": {
+            "type": "string"
+        },
+        "redisPrivateEndpointName": {
+            "type": "string"
+        },
+        "redisPveFqdn": {
+            "type": "string"
+        },
+        "redisPveIp": {
+            "type": "string"
+        },
+        "sslCert": {
+            "type": "string"
+        },
+        "agwCertName": {
+            "type": "string"
+        },
+        "mysqlServerName": {
+            "type": "string"
+        },
+        "mysqlAdmin": {
+            "type": "securestring"
+        },
+        "mysqlAdminPassword": {
+            "type": "securestring"
+        },
+        "mysqlSkuName": {
+            "type": "string"
+        },
+        "mysqlSkuTier": {
+            "type": "string"
+        },
+        "mysqlPrivateDns": {
+            "type": "string"
+        },
+        "vmAdminPassword": {
+            "type": "securestring"
+        },
+        "mediaServicesStorageAccount": {
+            "type": "string"
+        },
+        "mediaServicesName": {
+            "type": "string"
+        },
+        "bastionDnsName": {
+            "type": "string"
+        },
+        "bastionName": {
+            "type": "string"
+        },
+        "networkInterfaceName1": {
+            "type": "string"
+        },
+        "networkInterfaceName2": {
+            "type": "string"
+        },
+        "vmPrivateIp1": {
+            "type": "string"
+        },
+        "vmPrivateIp2": {
+            "type": "string"
+        },
+        "vmName1": {
+            "type": "string"
+        },
+        "vmName2": {
+            "type": "string"
+        },
+        "sshKeyData": {
+            "type": "securestring"
+        },
+        "chefExtension": {
+            "type": "string"
+        },
+        "runlist": {
+            "type": "string"
+        },
+        "chefUrl": {
+            "type": "string"
+        },
+        "validationClientName": {
+            "type": "string"
+        },
+        "validationKey": {
+            "type": "securestring"
+        },
+        "chefEnv": {
+            "type": "string"
+        },
+        "mediaServicesTransform": {
+            "type": "string"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('vnetName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[parameters('vnetName')]"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('subnetName1')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix1')]",
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "serviceEndpoints": [
+                                {
+                                    "service": "Microsoft.KeyVault"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetName2')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix2')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetName3')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix3')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetName4')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix4')]",
+                            "delegations": [
+                                {
+                                    "name": "dlg-Microsoft.DBforMySQL-flexibleServers",
+                                    "properties": {
+                                        "serviceName": "Microsoft.DBforMySQL/flexibleServers"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('redisName')]",
+            "type": "Microsoft.Cache/Redis",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[parameters('redisName')]"
+            },
+            "dependsOn": [
+                "[parameters('agwName')]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "Standard",
+                    "family": "C",
+                    "capacity": 1
+                },
+                "enableNonSslPort": true,
+                "publicNetworkAccess": "Disabled",
+                "redisConfiguration": {
+                    "maxclients": "1000",
+                    "maxmemory-reserved": "50",
+                    "maxfragmentationmemory-reserved": "50",
+                    "maxmemory-delta": "50"
+                }
+            }
+        },
+        {
+            "name": "[parameters('networkSecurityGroup')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "nsgRule1",
+                        "properties": {
+                            "description": "description",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "[parameters('redisPrivateLink')]",
+            "location": "global",
+            "dependsOn": [
+                "[parameters('vnetName')]"
+            ],
+            "properties": {
+                "maxNumberOfRecordSets": 25000,
+                "maxNumberOfVirtualNetworkLinks": 1000,
+                "maxNumberOfVirtualNetworkLinksWithRegistration": 100,
+                "numberOfRecordSets": 2,
+                "numberOfVirtualNetworkLinks": 1,
+                "numberOfVirtualNetworkLinksWithRegistration": 0,
+                "provisioningState": "Succeeded"
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/A",
+            "apiVersion": "2018-09-01",
+            "name": "[concat(parameters('redisPrivateLink'), '/', parameters('redisName'))]",
+            "dependsOn": [
+                "[parameters('redisPrivateLink')]"
+            ],
+            "properties": {
+                "ttl": 3600,
+                "aRecords": [
+                    {
+                        "ipv4Address": "[parameters('redisPrivIP')]"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/SOA",
+            "apiVersion": "2018-09-01",
+            "name": "[concat(parameters('redisPrivateLink'), '/@')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('redisPrivateLink'))]"
+            ],
+            "properties": {
+                "ttl": 3600,
+                "soaRecord": {
+                    "email": "azureprivatedns-host.microsoft.com",
+                    "expireTime": 2419200,
+                    "host": "azureprivatedns.net",
+                    "refreshTime": 3600,
+                    "retryTime": 300,
+                    "serialNumber": 1,
+                    "minimumTtl": 10
+                }               
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2018-09-01",
+            "name": "[concat(parameters('redisPrivateLink'), '/redis-vnet-link')]",
+            "location": "global",
+            "dependsOn": [
+                "[parameters('redisPrivateLink')]",
+                "[parameters('vnetName')]"
+            ],
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('agwPubIPName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('agwName')]",
+                    "fqdn": "[parameters('agwFQDN')]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('bastionPubIpName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4",
+                "idleTimeoutInMinutes": 4
+            }
+        },
+                {
+            "name": "[parameters('vmPubIp1Name')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4",
+                "idleTimeoutInMinutes": 4
+            }
+        },
+                {
+            "name": "[parameters('vmPubIp2Name')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4",
+                "idleTimeoutInMinutes": 4
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('redisPrivateEndpointName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('vnetName')]",
+                "[parameters('redisName')]"
+            ],
+            "properties": {
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[parameters('redisPrivateEndpointName')]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Cache/Redis',parameters('redisName'))]",
+                            "privateLinkServiceConnectionState": {
+                                "status": "Approved",
+                                "description": "Auto-Approved",
+                                "actionsRequired": "None"
+                            },
+                            "groupIds": [
+                                "redisCache"
+                            ]
+                        }
+                    }
+                ],
+                "manualPrivateLinkServiceConnections": [],
+                "subnet": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets',parameters('vnetName'),parameters('subnetName1'))]"
+                },
+                "customDnsConfigs": [
+                    {
+                        "fqdn": "[parameters('redisPveFqdn')]",
+                        "ipAddresses": [
+                            "[parameters('redisPveIp')]"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/applicationGateways",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('agwName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('agwPubIpName'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "Standard_v2",
+                    "tier": "Standard_v2",
+                    "capacity": 2
+                },
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "appGatewayIpConfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName2'))]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "appGatewayFrontendIP",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "PublicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('agwPubIPName'))]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "port_80",
+                        "properties": {
+                            "Port": 80
+                        }
+                    },
+                    {
+                        "name": "port_443",
+                        "properties": {
+                            "port": 443
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "pool-ccds-php-webservers",
+                        "properties": {
+                            "backendAddresses": []
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "HTTP-Setting",
+                        "properties": {
+                            "Port": 80,
+                            "Protocol": "Http",
+                            "CookieBasedAffinity": "Enabled",
+                            "pickHostNameFromBackendAddress": false,
+                            "affinityCookieName": "ApplicationGatewayAffinity",
+                            "requestTimeout": 20
+                        }
+                    }
+                ],
+                "sslCertificates": [
+                    {
+                        "name": "[parameters('agwCertName')]",
+                            "properties": {
+                                "data": "[parameters('sslCert')]",
+                                "password": ""
+                            }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "HTTP-Listener",
+                        "properties": {
+                            "FrontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('agwName')),'/frontendIPConfigurations/appGatewayFrontendIP')]"
+                            },
+                            "FrontendPort": {
+                                "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',  parameters('agwName')), '/frontendPorts/port_80')]"
+                            },
+                            "Protocol": "Http",
+                            "hostNames": [],
+                            "requireServerNameIndication": false
+                        }
+                    },
+                    {
+                        "name": "HTTPS-Listener",
+                            "properties": {
+                            "FrontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways',parameters('agwName')),'/frontendIPConfigurations/appGatewayFrontendIP')]"
+                            },
+                            "FrontendPort": {
+                                "Id": "[concat(resourceId('Microsoft.Network/applicationGateways',  parameters('agwName')), '/frontendPorts/port_443')]"
+                            },
+                            "Protocol": "Https",
+                            "sslCertificate": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), concat('/sslCertificates/', parameters('agwCertName')))]"
+                            },
+                            "hostNames": [],
+                            "requireServerNameIndication": false
+                        }
+                    }
+                ],
+                "urlPathMaps": [],
+                "requestRoutingRules": [
+                    {
+                        "Name": "HTTP-Rule",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/httpListeners/HTTP-Listener')]"
+                            },
+                            "redirectConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/redirectConfigurations/HTTP-Rule')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "HTTPS-Rule",
+                        "properties": {
+                            "ruleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/httpListeners/HTTPS-Listener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/backendAddressPools/pool-ccds-php-webservers')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/backendHttpSettingsCollection/HTTP-Setting')]"
+                            },
+                            "rewriteRuleSet": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/rewriteRuleSets/CorsRewrite')]"
+                            }
+                        }
+                    }
+                ],
+                "probes": [],
+                "rewriteRuleSets": [
+                    {
+                        "name": "CorsRewrite",
+                        "properties": {
+                            "rewriteRules": [
+                                {
+                                    "ruleSequence": 100,
+                                    "conditions": [],
+                                    "name": "Enable_Cors",
+                                    "actionSet": {
+                                        "requestHeaderConfigurations": [],
+                                        "responseHeaderConfigurations": [
+                                            {
+                                                "headerName": "Access-Control-Allow-Origin",
+                                                "headerValue": "*"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "redirectConfigurations": [
+                    {
+                        "name": "HTTP-Rule",
+                        "properties": {
+                            "redirectType": "Permanent",
+                            "targetListener": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/httpListeners/HTTPS-Listener')]"
+                            },
+                            "includePath": true,
+                            "includeQueryString": true,
+                            "requestRoutingRules": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/requestRoutingRules/HTTP-Rule')]"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "privateLinkConfigurations": [],
+                "enableHttp2": false
+            }
+        },        
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "[parameters('mysqlPrivateDns')]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "properties": {
+                "maxNumberOfRecordSets": 25000,
+                "maxNumberOfVirtualNetworkLinks": 1000,
+                "maxNumberOfVirtualNetworkLinksWithRegistration": 100,
+                "numberOfRecordSets": 2,
+                "numberOfVirtualNetworkLinks": 1,
+                "numberOfVirtualNetworkLinksWithRegistration": 0
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2018-09-01",
+            "name": "[concat(parameters('mysqlPrivateDns'),'/',parameters('vnetName'))]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('mysqlPrivateDns'))]"
+            ],
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[parameters('mediaServicesStorageAccount')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": false,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('mediaServicesStorageAccount'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('mediaServicesStorageAccount'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": [
+                        {
+                            "allowedOrigins": [
+                                "*"
+                            ],
+                            "allowedMethods": [
+                                "DELETE",
+                                "GET",
+                                "HEAD",
+                                "MERGE",
+                                "POST",
+                                "OPTIONS",
+                                "PUT"
+                            ],
+                            "maxAgeInSeconds": 3600,
+                            "exposedHeaders": [
+                                "*"
+                            ],
+                            "allowedHeaders": [
+                                "*"
+                            ]
+                        }
+                    ]
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2021-01-01",
+            "name": "[concat(parameters('mediaServicesStorageAccount'), '/default/poster')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('mediaServicesStorageAccount'), 'default')]"
+            ],
+            "properties": {
+                "denyEncryptionScopeOverride": false,
+                "defaultEncryptionScope": "$account-encryption-key",
+                "publicAccess": "None"
+            }
+        },
+        {
+            "name": "[parameters('mediaServicesName')]",
+            "type": "Microsoft.Media/mediaServices",
+            "apiVersion": "2018-07-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('mediaServicesStorageAccount')]"
+            ],
+            "properties": {
+                "storageAccounts": [
+                    {
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('mediaServicesStorageAccount'))]",
+                        "type": "Primary"
+                    }
+              ]
+            }
+        },
+        {
+            "name": "[concat(parameters('mediaServicesName'),'/',parameters('mediaServicesTransform'))]",
+            "type": "Microsoft.Media/mediaServices/transforms",
+            "apiVersion": "2018-07-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Media/mediaServices',parameters('mediaServicesName'))]"
+            ],
+            "properties": {
+                "outputs": [
+                    {
+                        "relativePriority": "Normal",
+                        "onError": "StopProcessingJob",
+                        "preset": {
+                            "@odata.type": "#Microsoft.Media.BuiltInStandardEncoderPreset",
+                            "presetName": "H264MultipleBitrate720p"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('networkInterfaceName1')]",
+            "apiVersion": "2020-08-01",
+            "location": "West US",
+            "dependsOn": [
+                "[parameters('agwName')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "[parameters('vmPrivateIp1')]",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetName1'))]"
+                            },
+                            "primary": true,
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('vmPubIp1Name'))]"
+                            },
+                            "privateIPAddressVersion": "IPv4",
+                            "applicationGatewayBackendAddressPools": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/backendAddressPools/pool-ccds-php-webservers')]"
+                                }
+                            ]                            
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroup'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('networkInterfaceName2')]",
+            "apiVersion": "2020-08-01",
+            "location": "West US",
+            "dependsOn": [
+                "[parameters('agwName')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "[parameters('vmPrivateIp2')]",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetName1'))]"
+                            },
+                            "primary": true,
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('vmPubIp2Name'))]"
+                            },
+                            "privateIPAddressVersion": "IPv4",
+                            "applicationGatewayBackendAddressPools": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('agwName')), '/backendAddressPools/pool-ccds-php-webservers')]"
+                                }
+                            ]                            
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroup'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName1')]",
+            "apiVersion": "2020-12-01",
+            "location": "West US",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "dependsOn": [
+                "[parameters('networkInterfaceName1')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS1_v2"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "sku": "20_04-lts-gen2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('vmName1'), '_disk1')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk":{
+                            "storageAccountType": "Premium_LRS"
+                        },
+                        "diskSizeGB": 30
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName1')]",
+                    "adminUsername": "ccds-admin",
+                    "adminPassword": "[parameters('vmAdminPassword')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "/home/ccds-admin/.ssh/authorized_keys",
+                                    "keyData": "[parameters('sshKeyData')]"
+                                }
+                            ]
+                        },
+                        "provisionVMAgent": true,
+                        "patchSettings": {
+                            "patchMode": "ImageDefault"
+                        }
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',parameters('networkInterfaceName1'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[concat(parameters('vmName1'), '/' ,parameters('chefExtension'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "customScript1 for Linux VM"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName1'))]"
+            ],
+            "properties": {
+                "publisher": "Chef.Bootstrap.WindowsAzure",
+                "type": "LinuxChefClient",
+                "typeHandlerVersion": "1210.14",
+                "autoUpgradeMinorVersion": false,
+                "settings": {
+                    "bootstrap_options": {
+                        "chef_server_url": "[parameters('chefUrl')]",
+                        "environment": "[parameters('chefEnv')]",
+                        "validation_client_name": "[parameters('validationClientName')]",
+                        "chef_node_name": "[parameters('vmName1')]"
+                    },
+                    "runlist": "[parameters('runlist')]",
+                    "CHEF_LICENSE": "accept-silent",
+                    "hints": {
+                        "public_ip": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('vmPubIp1Name'))).ipAddress]"
+                    }
+                },
+                "protectedSettings": {
+                    "validation_key": "[parameters('validationKey')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName2')]",
+            "apiVersion": "2020-12-01",
+            "location": "West US",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "dependsOn": [
+                "[parameters('networkInterfaceName2')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS1_v2"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "sku": "20_04-lts-gen2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('vmName2'), '_disk1')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk":{
+                            "storageAccountType": "Premium_LRS"
+                        },
+                        "diskSizeGB": 30
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName2')]",
+                    "adminUsername": "ccds-admin",
+                    "adminPassword": "[parameters('vmAdminPassword')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "/home/ccds-admin/.ssh/authorized_keys",
+                                    "keyData": "[parameters('sshKeyData')]"
+                                }
+                            ]
+                        },
+                        "provisionVMAgent": true,
+                        "patchSettings": {
+                            "patchMode": "ImageDefault"
+                        }
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',parameters('networkInterfaceName2'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[concat(parameters('vmName2'), '/' ,parameters('chefExtension'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "customScript1 for Linux VM"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName2'))]"
+            ],
+            "properties": {
+                "publisher": "Chef.Bootstrap.WindowsAzure",
+                "type": "LinuxChefClient",
+                "typeHandlerVersion": "1210.14",
+                "autoUpgradeMinorVersion": false,
+                "settings": {
+                    "bootstrap_options": {
+                        "chef_server_url": "[parameters('chefUrl')]",
+                        "environment": "[parameters('chefEnv')]",
+                        "validation_client_name": "[parameters('validationClientName')]",
+                        "chef_node_name": "[parameters('vmName2')]"
+                    },
+                    "runlist": "[parameters('runlist')]",
+                    "CHEF_LICENSE": "accept-silent",
+                    "hints": {
+                        "public_ip": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('vmPubIp2Name'))).ipAddress]"
+                    }
+                },
+                "protectedSettings": {
+                    "validation_key": "[parameters('validationKey')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/bastionHosts",
+            "apiVersion": "2020-08-01",
+            "name": "[parameters('bastionName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('vnetName')]",
+                "[parameters('bastionPubIpName')]"
+            ],
+            "properties": {
+                "dnsName": "[parameters('bastionDnsName')]",
+                "ipConfigurations": [
+                    {
+                        "name": "IpConf",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('bastionPubIpName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName3'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}

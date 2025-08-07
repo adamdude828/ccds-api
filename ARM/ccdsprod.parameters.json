@@ -1,0 +1,167 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "redisName": {
+            "value": "redis-pub-ccds-php-prod-w"
+        },
+        "networkSecurityGroup":{
+            "value": "nsg-pub-ccds-php-prod-w"
+        },
+        "redisPrivateLink":{
+            "value": "privatelink.redis.cache.windows.net"
+        },
+        "bastionDnsName": {
+            "value": "bstn-pub-ccds-php-prod-w.bastion.azure.com"
+        },
+        "bastionName": {
+            "value": "bstn-pub-ccds-php-prod-w" 
+        },
+        "sshKeyData":{
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-prod-w"
+                },
+                "secretName": "bastionPubKey"
+            }
+        },
+        "vnetName": {
+            "value": "vn-pub-ccds-php-prod-w" 
+        },
+        "subnetName1": {
+            "value": "backend-server-pool" 
+        },
+        "subnetName2": {
+            "value": "applicationGateway" 
+        },
+        "subnetName3": {
+            "value": "AzureBastionSubnet" 
+        },
+        "subnetPrefix1": {
+            "value": "10.0.1.0/24" 
+        },
+        "subnetPrefix2": {
+            "value": "10.0.2.0/24" 
+        },
+        "subnetPrefix3": {
+            "value": "10.0.3.0/27" 
+        },
+        "redisPrivIp": {
+            "value": "10.0.1.6" 
+        },
+        "agwPubIpName": {
+            "value": "pip-agw-pub-ccds-php-prod-w" 
+        },
+        "bastionPubIpName": {
+            "value": "pip-bstn-pub-ccds-php-prod-w" 
+        },
+        "vmPubIp1Name":{
+            "value": "pip-vm-pub-ccds-php-prod-w-1"
+        },
+        "vmPubIp2Name":{
+            "value": "pip-vm-pub-ccds-php-prod-w-2"
+        },
+        "agwName": {
+            "value": "agw-pub-ccds-php-prod-w" 
+        },
+        "agwFqdn": {
+            "value": "agw-pub-ccds-php-prod-w.westus.cloudapp.azure.com" 
+        },
+        "redisPrivateEndpointName": {
+            "value": "pve-redis-pub-ccds-php-prod-w" 
+        },
+        "redisPveFqdn": {
+            "value": "redis-pub-ccds-php-prod-w.redis.cache.windows.net" 
+        },
+        "redisPveIp": {
+            "value": "10.0.1.6" 
+        },
+        "sslCert": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-prod-w"
+                },
+                "secretName": "prodcert"
+            }
+        },
+        "agwCertName": {
+            "value": "agw-prod-cert-namecheap-1" 
+        },
+        "mysqlServerName": {
+            "value": "mysql-pub-ccds-php-prod-w-02"
+        },
+        "mysqlAdmin": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-prod-w"
+                },
+                "secretName": "mysqladmin"
+            }
+        },
+        "mysqlAdminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-prod-w"
+                },
+                "secretName": "mysqlAdminPassword"
+            }
+        },
+        "mediaServicesStorageAccount": {
+            "value": "stcontentblobls03" 
+        },
+        "mediaServicesName": {
+            "value": "mspubccdsphpprodw" 
+        },
+        "networkInterfaceName1": {
+            "value": "nic-vm-pub-ccds-php-prod-w-1" 
+        },
+        "networkInterfaceName2": {
+            "value": "nic-vm-pub-ccds-php-prod-w-2" 
+        },
+        "vmPrivateIp1": {
+            "value": "10.0.1.4" 
+        },
+        "vmName1": {
+            "value": "vm-pub-ccds-php-prod-w-1" 
+        },
+        "vmName2": {
+            "value": "vm-pub-ccds-php-prod-w-2" 
+        },
+        "vmPrivateIp2": {
+            "value": "10.0.1.5" 
+        },
+        "chefExtension": {
+            "value": "prodChefExtension"
+        },
+        "runlist": {
+            "value": "role[ccds_prod]"
+        },
+        "chefEnv": {
+            "value": "ccds-prod"
+        },
+        "chefUrl": {
+            "value": "https://chef.challenger.video/organizations/challenger"
+        },
+        "validationClientName": {
+            "value": "challenger-validator"
+        },
+        "validationKey":{
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-prod-w"
+                },
+                "secretName": "validationKey"
+            }
+        },
+        "mediaServicesTransform": {
+            "value": "tsfm-ms-pub-ccds-php-prod-w"
+        },
+        "vmAdminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/2f8df4de-39b4-475c-ae78-1cefb4f2c573/resourcegroups/rg-mis-kv-u-global-w/providers/Microsoft.KeyVault/vaults/kv-pub-ccds-prod-w"
+                },
+                "secretName": "vmAdminPassword"
+            }}
+    }
+}

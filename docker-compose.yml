@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./docker/stages/4-xdebug
+      dockerfile: Dockerfile
+    image: laravel-app-php8319-sqlsrv-xdebug:latest
+    platform: linux/amd64
+    container_name: laravel_app_dev
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      - DB_CONNECTION=sqlsrv
+      - DB_HOST=db
+      - DB_PORT=1433
+      - DB_DATABASE=laravel
+      - DB_USERNAME=sa
+      - DB_PASSWORD=abcDEF123#
+      - DB_TRUST_SERVER_CERTIFICATE=true
+      - WAIT_FOR_DB=true
+      - RUN_MIGRATIONS=true
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+      - MAIL_FROM_ADDRESS=test@example.com
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=null
+    ports:
+      - "8000:80"
+      - "9003:9003" # Xdebug port
+    volumes:
+      - ./:/var/www/html # Mount the entire project for development
+      - ./storage/email-data:/var/www/data # Mount for storing email header images
+    networks:
+      - laravel
+    depends_on:
+      - db
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # For Xdebug to connect back to the host
+
+  # SQL Server for development and testing
+  db:
+    build:
+      context: ./docker/database
+      dockerfile: Dockerfile
+    container_name: sqlserver_dev
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=abcDEF123#
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql/data
+      - sqlserver_log:/var/opt/mssql/log
+      - sqlserver_secrets:/var/opt/mssql/secrets
+    networks:
+      - laravel
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "abcDEF123#" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis service
+  redis:
+    image: redis:alpine
+    container_name: redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - laravel
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Mail testing server
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    platform: linux/amd64
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+    driver: local
+  sqlserver_log:
+    driver: local
+  sqlserver_secrets:
+    driver: local
+  redis_data:
+    driver: local

@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetName": {
+            "value": "vn-pub-ccds-php-dev-w-1" 
+        },
+        "subnetName1": {
+            "value": "backend-server-pool" 
+        },
+        "subnetName2": {
+            "value": "applicationGateway" 
+        },
+        "subnetName3": {
+            "value": "AzureBastionSubnet" 
+        },
+        "subnetPrefix1": {
+            "value": "10.0.1.0/24" 
+        },
+        "subnetPrefix2": {
+            "value": "10.0.2.0/24" 
+        },
+        "subnetPrefix3": {
+            "value": "10.0.3.0/27" 
+        },
+        "mediaServicesStorageAccount": {
+            "value": "stcontentgpv2ls05" 
+        },
+        "mediaServicesName": {
+            "value": "mspubccdsphpdevw" 
+        },
+        "mediaServiceCdn": {
+            "value": "cdnp-pub-ccds-video-dev-w"
+        },
+        "mediaServicesTransform": {
+            "value": "tsfm-pub-ccds-php-dev-w"
+        }
+    }
+}

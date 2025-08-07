@@ -1,0 +1,280 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmName1": {
+            "type": "string"
+        },
+        "vmAdminPassword": {
+            "type": "string"
+        },
+        "sshKeyData": {
+            "type": "string"
+        },
+        "chefExtension": {
+            "type": "string"
+        },
+        "chefUrl": {
+            "type": "string"
+        },
+        "chefEnv": {
+            "type": "string"
+        },
+        "validationClientName": {
+            "type": "string"
+        },
+        "runlist": {
+            "type": "string"
+        },
+        "validationKey": {
+            "type": "string"
+        },
+        "networkInterface1ID": {
+            "type": "string"
+        },
+        "networkInterface2ID": {
+            "type": "string"
+        },
+        "vmPubIp1Name": {
+            "type": "string"
+        },
+        "vmPubIp2Name": {
+            "type": "string"
+        },
+        "vmName2": {
+            "type": "string"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('vmPubIp1Name')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4",
+                "idleTimeoutInMinutes": 4
+            }
+        },
+                {
+            "name": "[parameters('vmPubIp2Name')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-05-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4",
+                "idleTimeoutInMinutes": 4
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName1')]",
+            "apiVersion": "2020-12-01",
+            "location": "West US",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vmPubIp1Name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS1_v2"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "sku": "20_04-lts-gen2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('vmName1'), '_disk1')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk":{
+                            "storageAccountType": "Premium_LRS"
+                        },
+                        "diskSizeGB": 30
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName1')]",
+                    "adminUsername": "ccds-admin",
+                    "adminPassword": "[parameters('vmAdminPassword')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "/home/ccds-admin/.ssh/authorized_keys",
+                                    "keyData": "[parameters('sshKeyData')]"
+                                }
+                            ]
+                        },
+                        "provisionVMAgent": true,
+                        "patchSettings": {
+                            "patchMode": "ImageDefault"
+                        }
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[parameters('networkInterface1ID')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[concat(parameters('vmName1'), '/' ,parameters('chefExtension'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "customScript1 for Linux VM"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName1'))]"
+            ],
+            "properties": {
+                "publisher": "Chef.Bootstrap.WindowsAzure",
+                "type": "LinuxChefClient",
+                "typeHandlerVersion": "1210.14",
+                "autoUpgradeMinorVersion": false,
+                "settings": {
+                    "bootstrap_options": {
+                        "chef_server_url": "[parameters('chefUrl')]",
+                        "environment": "[parameters('chefEnv')]",
+                        "validation_client_name": "[parameters('validationClientName')]",
+                        "chef_node_name": "[parameters('vmName1')]"
+                    },
+                    "runlist": "[parameters('runlist')]",
+                    "CHEF_LICENSE": "accept-silent",
+                    "hints": {
+                        "public_ip": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('vmPubIp1Name'))).ipAddress]"
+                    }
+                },
+                "protectedSettings": {
+                    "validation_key": "[parameters('validationKey')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName2')]",
+            "apiVersion": "2020-12-01",
+            "location": "West US",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vmPubIp2Name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS1_v2"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "sku": "20_04-lts-gen2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('vmName2'), '_disk1')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk":{
+                            "storageAccountType": "Premium_LRS"
+                        },
+                        "diskSizeGB": 30
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName2')]",
+                    "adminUsername": "ccds-admin",
+                    "adminPassword": "[parameters('vmAdminPassword')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "/home/ccds-admin/.ssh/authorized_keys",
+                                    "keyData": "[parameters('sshKeyData')]"
+                                }
+                            ]
+                        },
+                        "provisionVMAgent": true,
+                        "patchSettings": {
+                            "patchMode": "ImageDefault"
+                        }
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[parameters('networkInterface2ID')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[concat(parameters('vmName2'), '/' ,parameters('chefExtension'))]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "customScript1 for Linux VM"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName2'))]"
+            ],
+            "properties": {
+                "publisher": "Chef.Bootstrap.WindowsAzure",
+                "type": "LinuxChefClient",
+                "typeHandlerVersion": "1210.14",
+                "autoUpgradeMinorVersion": false,
+                "settings": {
+                    "bootstrap_options": {
+                        "chef_server_url": "[parameters('chefUrl')]",
+                        "environment": "[parameters('chefEnv')]",
+                        "validation_client_name": "[parameters('validationClientName')]",
+                        "chef_node_name": "[parameters('vmName2')]"
+                    },
+                    "runlist": "[parameters('runlist')]",
+                    "CHEF_LICENSE": "accept-silent",
+                    "hints": {
+                        "public_ip": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('vmPubIp2Name'))).ipAddress]"
+                    }
+                },
+                "protectedSettings": {
+                    "validation_key": "[parameters('validationKey')]"
+                }
+            }
+        }
+    ]
+}

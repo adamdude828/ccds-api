@@ -1,0 +1,226 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetName": {
+            "type": "string"
+        },
+        "subnetName1": {
+            "type": "string"
+        },
+        "subnetName2": {
+            "type": "string"
+        },
+        "subnetName3": {
+            "type": "string"
+        },
+        "subnetPrefix1": {
+            "type": "string"
+        },
+        "subnetPrefix2": {
+            "type": "string"
+        },
+        "subnetPrefix3": {
+            "type": "string"
+        },
+        "mediaServicesStorageAccount": {
+            "type": "string"
+        },
+        "mediaServicesName": {
+            "type": "string"
+        },
+        "mediaServicesTransform": {
+            "type": "string"
+        },
+        "mediaServiceCdn": {
+            "type": "string"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('vnetName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[parameters('vnetName')]"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('subnetName1')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix1')]",
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "serviceEndpoints": [
+                                {
+                                    "service": "Microsoft.Sql"
+                                },
+                                {
+                                    "service": "Microsoft.KeyVault"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetName2')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix2')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetName3')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefix3')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[parameters('mediaServicesStorageAccount')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": false,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('mediaServicesStorageAccount'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('mediaServicesStorageAccount'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": [
+                        {
+                            "allowedOrigins": [
+                                "*"
+                            ],
+                            "allowedMethods": [
+                                "DELETE",
+                                "GET",
+                                "HEAD",
+                                "MERGE",
+                                "POST",
+                                "OPTIONS",
+                                "PUT"
+                            ],
+                            "maxAgeInSeconds": 3600,
+                            "exposedHeaders": [
+                                "*"
+                            ],
+                            "allowedHeaders": [
+                                "*"
+                            ]
+                        }
+                    ]
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2021-01-01",
+            "name": "[concat(parameters('mediaServicesStorageAccount'), '/default/poster')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('mediaServicesStorageAccount'), 'default')]"
+            ],
+            "properties": {
+                "denyEncryptionScopeOverride": false,
+                "defaultEncryptionScope": "$account-encryption-key",
+                "publicAccess": "None"
+            }
+        },
+        {
+            "name": "[parameters('mediaServicesName')]",
+            "type": "Microsoft.Media/mediaServices",
+            "apiVersion": "2018-07-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('mediaServicesStorageAccount')]"
+            ],
+            "properties": {
+                "storageAccounts": [
+                    {
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('mediaServicesStorageAccount'))]",
+                        "type": "Primary"
+                    }
+              ]
+            }
+        },
+        {
+            "name": "[concat(parameters('mediaServicesName'),'/',parameters('mediaServicesTransform'))]",
+            "type": "Microsoft.Media/mediaServices/transforms",
+            "apiVersion": "2018-07-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Media/mediaServices',parameters('mediaServicesName'))]"
+            ],
+            "properties": {
+                "outputs": [
+                    {
+                        "relativePriority": "Normal",
+                        "onError": "StopProcessingJob",
+                        "preset": {
+                            "@odata.type": "#Microsoft.Media.BuiltInStandardEncoderPreset",
+                            "presetName": "H264MultipleBitrate720p"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles",
+            "apiVersion": "2020-09-01",
+            "name": "[parameters('mediaServiceCdn')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_Verizon"
+            },
+            "kind": "cdn",
+            "properties": {}
+        }
+    ],
+    "outputs": {}
+}

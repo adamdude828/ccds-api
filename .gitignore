@@ -1,0 +1,75 @@
+# Laravel
+/vendor/
+node_modules/
+npm-debug.log
+yarn-error.log
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+auth.json
+
+# Storage
+/storage/*.key
+/storage/app/public/
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
+/storage/logs/
+/storage/email-data/
+
+# Public
+/public/hot
+/public/storage
+/public/mix-manifest.json
+
+# Docker data directories
+/docker/database/data/
+/docker/redis/data/
+/database/data/
+/redis/data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+.phpunit.cache
+.php-cs-fixer.cache
+phpunit.xml
+coverage/
+.coverage
+coverage-report/
+coverage-summary.md
+
+# Build artifacts
+/build/
+/dist/
+*.log
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars.backup
+
+# Test containers
+test-container/

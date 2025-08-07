@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mysqlServerName": {
+            "type": "string"
+        },
+        "mysqlPrivateDns": {
+            "type": "string"
+        },
+        "vnetName": {
+            "type": "string"
+        },
+        "mysqlSkuName": {
+            "type": "string"
+        },
+        "mysqlSkuTier": {
+            "type": "string"
+        },
+        "mysqlAdmin": {
+            "type": "securestring"
+        },
+        "mysqlAdminPassword": {
+            "type": "securestring"
+        },
+        "subnetName4": {
+            "type": "string"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.DBforMySQL/flexibleServers",
+            "apiVersion": "2022-09-30-preview",
+            "name": "[parameters('mysqlServerName')]",
+            "location": "West US",
+            "sku": {
+                "name": "[parameters('mysqlSkuName')]",
+                "tier": "[parameters('mysqlSkuTier')]"
+            },
+            "properties": {
+                "administratorLogin": "[parameters('mysqlAdmin')]",
+                "administratorLoginPassword": "[parameters('mysqlAdminPassword')]",
+                "storage": {
+                    "storageSizeGB": 20,
+                    "iops": 360,
+                    "autoGrow": "Enabled",
+                    "autoIoScaling": "Disabled",
+                    "logOnDisk": "Disabled"
+                },
+                "version": "5.7",
+                "replicationRole": "None",
+                "network": {
+                    "publicNetworkAccess": "Disabled",
+                    "delegatedSubnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets',parameters('vnetName'),parameters('subnetName4'))]",
+                    "privateDnsZoneResourceId": "[resourceId('Microsoft.Network/privateDnsZones', parameters('mysqlPrivateDns'))]"
+                },
+                "backup": {
+                    "backupRetentionDays": 7,
+                    "geoRedundantBackup": "Disabled"
+                },
+                "highAvailability": {
+                    "mode": "Disabled"
+                }
+            }
+        }
+    ]
+}

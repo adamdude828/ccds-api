@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "value": "2f8df4de-39b4-475c-ae78-1cefb4f2c573"
+        },
+        "name": {
+            "value": "func-pub-ccds-qa-w"
+        },
+        "location": {
+            "value": "West US"
+        },
+        "hostingPlanName": {
+            "value": "ASP-rgpubccdsphpmqaw-a12e"
+        },
+        "serverFarmResourceGroup": {
+            "value": "rg-pub-ccds-php-m-qa-w"
+        },
+        "alwaysOn": {
+            "value": false
+        },
+        "storageAccountName": {
+            "value": "stcontentblobls02"
+        },
+        "sku": {
+            "value": "Dynamic"
+        },
+        "skuCode": {
+            "value": "Y1"
+        },
+        "workerSize": {
+            "value": "0"
+        },
+        "workerSizeId": {
+            "value": "0"
+        },
+        "numberOfWorkers": {
+            "value": "1"
+        },
+        "use32BitWorkerProcess": {
+            "value": true
+        },
+        "netFrameworkVersion": {
+            "value": "v6.0"
+        },
+        "aadClientId": {
+            "value": "10f98f15-f500-489e-825a-5e96ee509c98"
+        },
+        "aadSecret": {
+            "value": ""
+        },
+        "aadTenantId": {
+            "value": "33ff1022-861e-4f0f-9a47-e41b14ab149a"
+        },
+        "AccountName": {
+            "value": "mspubccdsphpqaw"
+        },
+        "ArmEndpoint": {
+            "value": "https://management.azure.com/"
+        },
+        "resourceGroup": {
+            "value": "rg-pub-ccds-php-m-qa-w"
+        },
+        "transformName": {
+            "value": "tsfm-ms-pub-ccds-php-qa-w-02"
+        }
+    }
+}

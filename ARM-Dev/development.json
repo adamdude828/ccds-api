@@ -1,0 +1,31 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mediaServicesName": {
+            "type": "string"
+        },
+        "mediaServicesStorageAccount": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "name": "[parameters('mediaServicesName')]",
+            "type": "Microsoft.Media/mediaServices",
+            "apiVersion": "2018-07-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[parameters('mediaServicesStorageAccount')]"
+            ],
+            "properties": {
+                "storageAccounts": [
+                    {
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', parameters('mediaServicesStorageAccount'))]",
+                        "type": "Primary"
+                    }
+                ]
+            }
+        }
+    ]
+}
