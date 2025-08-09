@@ -80,6 +80,17 @@ return [
             'connection' => env('AZURE_STORAGE_CONNECTION'),
         ],
 
+        // Dedicated disk for PDF documents
+        'azure-documents' => [
+            'driver' => 'azure',
+            'name' => env('AZURE_STORAGE_NAME'),
+            'key' => env('AZURE_STORAGE_KEY'),
+            'container' => env('AZURE_STORAGE_DOCUMENTS_CONTAINER', 'documents'),
+            'url' => env('AZURE_STORAGE_URL'),
+            'prefix' => null,
+            'connection' => env('AZURE_STORAGE_CONNECTION'),
+        ],
+
     ],
 
     /*

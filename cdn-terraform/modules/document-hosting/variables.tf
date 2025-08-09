@@ -22,13 +22,19 @@ variable "storage_replication_type" {
 }
 
 variable "cdn_sku" {
-  description = "CDN Profile SKU"
+  description = "AFD Profile SKU (Standard_AzureFrontDoor or Premium_AzureFrontDoor)"
   type        = string
-  default     = "Standard_Microsoft"
+  default     = "Standard_AzureFrontDoor"
 }
 
 variable "custom_domain_name" {
-  description = "Custom domain name for CDN (e.g., documents.example.com)"
+  description = "Custom domain name for Front Door (e.g., documents.example.com)"
+  type        = string
+  default     = ""
+}
+
+variable "dns_zone_id" {
+  description = "Resource ID of the Azure DNS zone hosting the custom domain (required for AFD custom domain)"
   type        = string
   default     = ""
 }

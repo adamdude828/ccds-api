@@ -19,27 +19,14 @@ resource "azurerm_storage_account" "documents" {
   account_tier             = "Standard"
   account_replication_type = var.storage_replication_type
   
-  # Ensure public access is allowed for CDN
-  public_network_access_enabled = true
-  allow_nested_items_to_be_public = true
+  public_network_access_enabled    = true
+  allow_nested_items_to_be_public  = true
   
-  # Enable static website hosting for better CDN compatibility
   static_website {
     index_document     = "index.html"
     error_404_document = "404.html"
   }
   
-  # Enable blob versioning (optional - uncomment to keep version history)
-  # blob_properties {
-  #   versioning_enabled = true
-  #   
-  #   # Optional: Also enable soft delete to recover deleted blobs
-  #   delete_retention_policy {
-  #     days = 7
-  #   }
-  # }
-  
-  # Enable CORS for CDN
   blob_properties {
     cors_rule {
       allowed_headers    = ["*"]
@@ -62,112 +49,123 @@ resource "azurerm_storage_account" "documents" {
 resource "azurerm_storage_container" "documents" {
   name                  = "documents"
   storage_account_name  = azurerm_storage_account.documents.name
-  container_access_type = "blob" # Allows public read access to blobs
+  container_access_type = "blob"
 }
 
-# CDN Profile
-resource "azurerm_cdn_profile" "documents" {
-  name                = "${var.project_name}-${var.environment}-cdn"
-  location            = azurerm_resource_group.documents.location
+# Azure Front Door (Standard/Premium) Profile
+resource "azurerm_cdn_frontdoor_profile" "documents" {
+  name                = "${var.project_name}-${var.environment}-afd"
   resource_group_name = azurerm_resource_group.documents.name
-  sku                 = var.cdn_sku
-  
+  sku_name            = var.cdn_sku # e.g. "Standard_AzureFrontDoor" or "Premium_AzureFrontDoor"
+
   tags = {
     Environment = var.environment
     Project     = var.project_name
-    Purpose     = "Document CDN"
+    Purpose     = "Document Front Door"
     ManagedBy   = "Terraform"
   }
 }
 
-# CDN Endpoint
-resource "azurerm_cdn_endpoint" "documents" {
-  name                = "${var.project_name}-${var.environment}-docs"
-  profile_name        = azurerm_cdn_profile.documents.name
-  location            = azurerm_resource_group.documents.location
-  resource_group_name = azurerm_resource_group.documents.name
-  
-  # Use the primary blob endpoint for standard blob access
-  origin_host_header = azurerm_storage_account.documents.primary_blob_host
-  
-  origin {
-    name      = "storage"
-    host_name = azurerm_storage_account.documents.primary_blob_host
+# AFD Endpoint
+resource "azurerm_cdn_frontdoor_endpoint" "documents" {
+  name                     = "${var.project_name}-${var.environment}-docs"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.documents.id
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    Purpose     = "Document AFD Endpoint"
+    ManagedBy   = "Terraform"
   }
-  
-  # Optimization for general web delivery
-  optimization_type = "GeneralWebDelivery"
-  
-  # Query string caching behavior - use query strings for unique cache entries
-  querystring_caching_behaviour = "UseQueryString"
-  
-  # Compression settings
-  is_compression_enabled = true
-  content_types_to_compress = [
-    "application/pdf",
-    "application/json",
-    "text/plain",
-    "text/html",
-    "text/css",
-    "text/javascript",
-    "application/x-javascript",
-    "application/javascript"
+}
+
+# AFD Origin Group
+resource "azurerm_cdn_frontdoor_origin_group" "documents" {
+  name                     = "${var.project_name}-${var.environment}-origin-group"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.documents.id
+
+  session_affinity_enabled = false
+
+  health_probe {
+    path                = "/"
+    protocol            = "Https"
+    interval_in_seconds = 60
+    request_type        = "HEAD"
+  }
+
+  load_balancing {
+    sample_size                 = 4
+    successful_samples_required = 3
+  }
+}
+
+# AFD Origin pointing to the Storage Account (blob endpoint)
+resource "azurerm_cdn_frontdoor_origin" "storage" {
+  name                          = "storage-origin"
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.documents.id
+
+  host_name                      = azurerm_storage_account.documents.primary_blob_host
+  http_port                      = 80
+  https_port                     = 443
+  origin_host_header             = azurerm_storage_account.documents.primary_blob_host
+  certificate_name_check_enabled = true
+  priority                       = 1
+  weight                         = 1000
+  enabled                        = true
+}
+
+# AFD Route for documents
+resource "azurerm_cdn_frontdoor_route" "documents" {
+  name                          = "${var.project_name}-${var.environment}-route"
+  cdn_frontdoor_endpoint_id     = azurerm_cdn_frontdoor_endpoint.documents.id
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.documents.id
+  cdn_frontdoor_origin_ids      = [azurerm_cdn_frontdoor_origin.storage.id]
+
+  enabled                       = true
+  patterns_to_match             = ["/documents/*"]
+  supported_protocols           = ["Http", "Https"]
+  forwarding_protocol           = "HttpsOnly"
+  https_redirect_enabled        = true
+
+  cache {
+    query_string_caching_behavior = "UseQueryString"
+    compression_enabled           = true
+    content_types_to_compress     = [
+      "application/json",
+      "text/plain",
+      "text/html",
+      "text/css",
+      "text/javascript",
+      "application/x-javascript",
+      "application/javascript"
+    ]
+  }
+
+  link_to_default_domain = true
+
+  depends_on = [
+    azurerm_cdn_frontdoor_origin.storage
   ]
-  
-  # Basic caching rules
-  global_delivery_rule {
-    cache_expiration_action {
-      behavior = "Override"
-      duration = "7.00:00:00" # 7 days cache for all content
-    }
-  }
-  
-  # Delivery rule for PDF files with specific caching
-  delivery_rule {
-    name  = "PDFCacheRule"
-    order = 1
-    
-    url_file_extension_condition {
-      operator         = "Equal"
-      match_values     = ["pdf"]
-      transforms       = ["Lowercase"]
-    }
-    
-    cache_expiration_action {
-      behavior = "Override"
-      duration = "30.00:00:00" # 30 days cache for PDFs
-    }
-  }
-  
-  tags = {
-    Environment = var.environment
-    Project     = var.project_name
-    Purpose     = "Document CDN Endpoint"
-    ManagedBy   = "Terraform"
+}
+
+# AFD Custom Domain - supports both Azure DNS and external DNS hosting
+resource "azurerm_cdn_frontdoor_custom_domain" "documents" {
+  count                    = var.custom_domain_name != "" ? 1 : 0
+  name                     = replace(var.custom_domain_name, ".", "-")
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.documents.id
+  host_name                = var.custom_domain_name
+
+  # Use Azure DNS validation only if dns_zone_id is provided, otherwise use domain control validation
+  dns_zone_id = var.dns_zone_id != "" ? var.dns_zone_id : null
+
+  tls {
+    certificate_type    = "ManagedCertificate"
+    minimum_tls_version = "TLS12"
   }
 }
 
-# CDN Custom Domain (conditional - only created if custom_domain_name is provided)
-resource "azurerm_cdn_endpoint_custom_domain" "documents" {
-  count = var.custom_domain_name != "" ? 1 : 0
-  
-  name            = replace(var.custom_domain_name, ".", "-")
-  cdn_endpoint_id = azurerm_cdn_endpoint.documents.id
-  host_name       = var.custom_domain_name
-  
-  # IMPORTANT: Azure CDN requires DNS validation BEFORE creating the custom domain
-  # You MUST create a CNAME record first:
-  #   YOUR_DOMAIN (e.g., documents.example.com) -> CDN_ENDPOINT.azureedge.net
-  # 
-  # Steps:
-  # 1. Run 'terraform plan' to see the CDN endpoint hostname
-  # 2. Create the CNAME record at your DNS provider
-  # 3. Wait for DNS propagation (verify with: nslookup YOUR_DOMAIN)
-  # 4. Run 'terraform apply' to create the custom domain
-}
-
-# Role Assignment for Service Principal
-# This allows the app to generate SAS tokens and manage blobs
+# If a custom domain is configured, consider creating a separate route resource bound via that domain in Portal/CLI as provider may not support attaching here.
+# Role Assignments for Service Principal (unchanged)
 resource "azurerm_role_assignment" "storage_blob_contributor" {
   count = var.service_principal_object_id != "" ? 1 : 0
   
@@ -178,7 +176,6 @@ resource "azurerm_role_assignment" "storage_blob_contributor" {
   depends_on = [azurerm_storage_account.documents]
 }
 
-# Additional role for generating SAS tokens
 resource "azurerm_role_assignment" "storage_account_contributor" {
   count = var.service_principal_object_id != "" ? 1 : 0
   

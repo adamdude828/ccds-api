@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Simple CDN Test Script
-# This script helps test the Storage + CDN setup
+# Simple AFD Test Script
+# This script helps test the Storage + Azure Front Door setup
 
 set -e
 
 echo "=========================================="
-echo "Storage + CDN Test Script"
+echo "Storage + Azure Front Door Test Script"
 echo "=========================================="
 
 # Colors for output
@@ -35,8 +35,8 @@ fi
 echo -e "\n${YELLOW}Enter the following information:${NC}"
 read -p "Storage Account Name: " STORAGE_ACCOUNT
 read -p "Resource Group Name: " RESOURCE_GROUP
-read -p "CDN Endpoint Name: " CDN_ENDPOINT
-read -p "CDN Profile Name: " CDN_PROFILE
+read -p "Front Door Endpoint Name: " FD_ENDPOINT
+read -p "Front Door Profile Name: " FD_PROFILE
 
 # Test 1: Check Storage Account
 echo -e "\n${YELLOW}1. Checking Storage Account...${NC}"
@@ -75,19 +75,19 @@ else
     exit 1
 fi
 
-# Test 3: Check CDN Endpoint
-echo -e "\n${YELLOW}3. Checking CDN Endpoint...${NC}"
-CDN_HOSTNAME=$(az cdn endpoint show \
-    --name "$CDN_ENDPOINT" \
-    --profile-name "$CDN_PROFILE" \
+# Test 3: Check Front Door Endpoint
+echo -e "\n${YELLOW}3. Checking Front Door Endpoint...${NC}"
+FD_HOSTNAME=$(az afd endpoint show \
+    --endpoint-name "$FD_ENDPOINT" \
+    --profile-name "$FD_PROFILE" \
     --resource-group "$RESOURCE_GROUP" \
     --query "hostName" -o tsv 2>/dev/null)
 
-if [ -n "$CDN_HOSTNAME" ]; then
-    echo -e "${GREEN}✓ CDN Endpoint exists${NC}"
-    echo "  CDN Hostname: $CDN_HOSTNAME"
+if [ -n "$FD_HOSTNAME" ]; then
+    echo -e "${GREEN}✓ Front Door Endpoint exists${NC}"
+    echo "  Endpoint Hostname: $FD_HOSTNAME"
 else
-    echo -e "${RED}✗ CDN Endpoint not found${NC}"
+    echo -e "${RED}✗ Front Door Endpoint not found${NC}"
     exit 1
 fi
 
@@ -103,22 +103,22 @@ else
     echo -e "${RED}✗ Direct storage access failed (HTTP $HTTP_CODE)${NC}"
 fi
 
-# Test 5: Access file via CDN
-echo -e "\n${YELLOW}5. Testing CDN access...${NC}"
-CDN_URL="https://${CDN_HOSTNAME}/documents/${TEST_FILE}"
-echo "  Testing URL: $CDN_URL"
-echo -e "${YELLOW}  Note: CDN propagation may take 5-10 minutes${NC}"
+# Test 5: Access file via Front Door
+echo -e "\n${YELLOW}5. Testing Front Door access...${NC}"
+FD_URL="https://${FD_HOSTNAME}/documents/${TEST_FILE}"
+echo "  Testing URL: $FD_URL"
+echo -e "${YELLOW}  Note: Edge propagation may take a few minutes${NC}"
 
-# Try multiple times as CDN might need time to propagate
+# Try multiple times as AFD might need time to propagate
 MAX_ATTEMPTS=20
 ATTEMPT=1
 SUCCESS=false
 
 while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$CDN_URL")
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$FD_URL")
     
     if [ "$HTTP_CODE" = "200" ]; then
-        echo -e "${GREEN}✓ CDN access successful (HTTP $HTTP_CODE)${NC}"
+        echo -e "${GREEN}✓ Front Door access successful (HTTP $HTTP_CODE)${NC}"
         SUCCESS=true
         break
     elif [ "$HTTP_CODE" = "404" ] && [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
@@ -132,14 +132,14 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
 done
 
 if [ "$SUCCESS" = false ]; then
-    echo -e "${RED}✗ CDN access failed after $MAX_ATTEMPTS attempts${NC}"
-    echo -e "${YELLOW}  This might be due to CDN propagation delay. Try again in a few minutes.${NC}"
+    echo -e "${RED}✗ Front Door access failed after $MAX_ATTEMPTS attempts${NC}"
+    echo -e "${YELLOW}  This might be due to propagation delay. Try again in a few minutes.${NC}"
 fi
 
-# Test 6: Check CDN Caching Headers
+# Test 6: Check Caching Headers
 if [ "$SUCCESS" = true ]; then
-    echo -e "\n${YELLOW}6. Checking CDN caching headers...${NC}"
-    HEADERS=$(curl -s -I "$CDN_URL")
+    echo -e "\n${YELLOW}6. Checking caching headers...${NC}"
+    HEADERS=$(curl -s -I "$FD_URL")
     
     if echo "$HEADERS" | grep -i "cache-control" >/dev/null; then
         echo -e "${GREEN}✓ Cache-Control header present${NC}"
@@ -147,7 +147,7 @@ if [ "$SUCCESS" = true ]; then
     fi
     
     if echo "$HEADERS" | grep -i "x-cache" >/dev/null; then
-        echo -e "${GREEN}✓ CDN cache header present${NC}"
+        echo -e "${GREEN}✓ Edge cache header present${NC}"
         echo "$HEADERS" | grep -i "x-cache"
     fi
 fi
@@ -168,7 +168,7 @@ echo -e "\n=========================================="
 echo -e "${GREEN}Test completed!${NC}"
 echo -e "\nSummary:"
 echo -e "- Storage Account: ${STORAGE_ACCOUNT}"
-echo -e "- CDN Hostname: ${CDN_HOSTNAME}"
-echo -e "- Document URL Pattern: https://${CDN_HOSTNAME}/documents/<filename>"
-echo -e "\n${YELLOW}Note: It may take 5-10 minutes for new content to be available via CDN${NC}"
+echo -e "- AFD Hostname: ${FD_HOSTNAME}"
+echo -e "- Document URL Pattern: https://${FD_HOSTNAME}/documents/<filename>"
+echo -e "\n${YELLOW}Note: It may take a few minutes for new content to be available via AFD${NC}"
 echo "==========================================" 

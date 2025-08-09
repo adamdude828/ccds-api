@@ -23,5 +23,6 @@ module "document_hosting" {
   storage_replication_type    = var.storage_replication_type
   cdn_sku                     = var.cdn_sku
   custom_domain_name          = var.custom_domain_name
+  dns_zone_id                 = var.dns_zone_id
   service_principal_object_id = module.azure_ad.service_principal_object_id
 }
