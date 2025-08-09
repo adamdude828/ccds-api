@@ -6,8 +6,8 @@ environment  = "dev"
 project_name = "do-git-mis-next"
 
 # Application URLs - Update these based on your deployment
-app_url           = "http://localhost:3000"                             # Main application URL
-redirect_uris     = ["http://localhost:3000/api/auth/callback/azure-ad"] # OAuth redirect URIs for web platform
+app_url           = "http://localhost:3000"                              # Main application URL
+redirect_uris     = ["http://localhost:3000/api/auth/callback/azure-ad"]  # OAuth redirect URIs for web platform
 spa_redirect_uris = ["http://localhost:3000/", "http://localhost:3000/dashboard"] # OAuth redirect URIs for SPA platform
 
 # Production example:
@@ -20,11 +20,24 @@ client_secret_expiration_days = 90    # Days until the client secret expires
 enable_secret_rotation        = false # Set to true to create a rotation secret
 
 # Document Hosting Configuration
-location                 = "East US"              # Azure region for resources
-storage_replication_type = "LRS"                  # Storage replication type (LRS, GRS, RAGRS, ZRS, GZRS, RAGZRS)
-cdn_sku                  = "Standard_Microsoft"   # CDN SKU (Standard_Microsoft, Standard_Akamai, Standard_Verizon, Premium_Verizon)
-front_door_sku           = "Standard_AzureFrontDoor" # Front Door SKU (Standard_AzureFrontDoor, Premium_AzureFrontDoor)
+location                 = "East US"   # Azure region for resources
+storage_replication_type = "LRS"       # LRS, GRS, RAGRS, ZRS, GZRS, RAGZRS
+cdn_sku                  = "Standard_AzureFrontDoor" # AFD SKU: Standard_AzureFrontDoor or Premium_AzureFrontDoor
+custom_domain_name       = ""          # Optional: e.g., documents.yourdomain.com
+# If you manage DNS in Azure, set dns_zone_id to the Azure DNS zone resource ID
+# Example: "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/dnsZones/yourdomain.com"
+dns_zone_id              = ""
 
 # Production recommendations:
-# storage_replication_type = "GRS"                # Geo-redundant storage for production
-# front_door_sku           = "Premium_AzureFrontDoor" # Premium tier includes advanced security features 
+# storage_replication_type = "GRS"                     # Geo-redundant storage for production
+# cdn_sku                  = "Premium_AzureFrontDoor"  # Premium tier adds advanced security features
+# custom_domain_name       = "documents.yourdomain.com"
+# dns_zone_id              = "/subscriptions/.../dnsZones/yourdomain.com"
+
+# Provider setup notes:
+# Prefer setting these via environment variables before running plan/apply:
+# export ARM_SUBSCRIPTION_ID="<subscription>"
+# export ARM_TENANT_ID="<tenant>"
+# export ARM_CLIENT_ID="<appId>"
+# export ARM_CLIENT_SECRET="<secret>"
+# Optionally set in providers: subscription_id / tenant_id 
