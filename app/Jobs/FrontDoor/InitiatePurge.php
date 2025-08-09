@@ -10,13 +10,11 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class TrackPurgeStatus implements ShouldQueue
+class InitiatePurge implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public CdnPurge $purge;
-
-    public int $tries = 30; // up to ~15 minutes with 30s delay
 
     public function __construct(CdnPurge $purge)
     {
@@ -26,14 +24,14 @@ class TrackPurgeStatus implements ShouldQueue
     public function handle(FrontDoorService $service): void
     {
         $purge = CdnPurge::find($this->purge->id);
-        if (!$purge || in_array($purge->status, ['succeeded', 'failed'])) {
+        if (!$purge) {
             return;
         }
-
-        $service->refreshStatus($purge);
-
+        if ($purge->status === 'pending') {
+            $service->initiate($purge);
+        }
         if ($purge->status === 'in_progress') {
-            self::dispatch($purge)->delay(now()->addSeconds(30));
+            TrackPurgeStatus::dispatch($purge)->delay(now()->addSeconds(10));
         }
     }
 }
