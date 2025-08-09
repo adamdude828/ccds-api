@@ -21,13 +21,13 @@ output "storage_container_name" {
 }
 
 output "cdn_endpoint_hostname" {
-  description = "Hostname of the CDN endpoint"
-  value       = azurerm_cdn_endpoint.documents.fqdn
+  description = "Hostname of the AFD endpoint"
+  value       = azurerm_cdn_frontdoor_endpoint.documents.host_name
 }
 
 output "cdn_endpoint_url" {
-  description = "Full URL of the CDN endpoint"
-  value       = "https://${azurerm_cdn_endpoint.documents.fqdn}"
+  description = "Full URL of the AFD endpoint"
+  value       = "https://${azurerm_cdn_frontdoor_endpoint.documents.host_name}"
 }
 
 output "resource_group_name" {
@@ -42,24 +42,24 @@ output "resource_group_location" {
 
 # Helper output for accessing documents
 output "document_access_url_pattern" {
-  description = "URL pattern for accessing documents via CDN"
-  value       = "https://${azurerm_cdn_endpoint.documents.fqdn}/${azurerm_storage_container.documents.name}/<document-name>"
+  description = "URL pattern for accessing documents via AFD"
+  value       = "https://${azurerm_cdn_frontdoor_endpoint.documents.host_name}/${azurerm_storage_container.documents.name}/<document-name>"
 }
 
 # Custom Domain Outputs
 output "custom_domain_hostname" {
   description = "Custom domain hostname if configured"
-  value       = var.custom_domain_name != "" ? var.custom_domain_name : null
+  value       = var.custom_domain_name != "" && var.dns_zone_id != "" ? var.custom_domain_name : null
 }
 
 output "custom_domain_url" {
   description = "Full URL of the custom domain if configured"
-  value       = var.custom_domain_name != "" ? "https://${var.custom_domain_name}" : null
+  value       = var.custom_domain_name != "" && var.dns_zone_id != "" ? "https://${var.custom_domain_name}" : null
 }
 
-output "custom_domain_cname_record" {
-  description = "CNAME record needed for custom domain validation"
-  value       = var.custom_domain_name != "" ? "CNAME ${var.custom_domain_name} -> ${azurerm_cdn_endpoint.documents.fqdn}" : null
+output "custom_domain_resource_id" {
+  description = "Resource ID of the AFD custom domain if configured"
+  value       = length(azurerm_cdn_frontdoor_custom_domain.documents) > 0 ? azurerm_cdn_frontdoor_custom_domain.documents[0].id : null
 }
 
 # Storage Account Identity Information

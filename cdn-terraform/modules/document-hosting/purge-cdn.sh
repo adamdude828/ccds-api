@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# CDN Purge Script
-# This script helps purge CDN cache after updating documents
+# AFD Purge Script
+# This script helps purge Azure Front Door cache after updating documents
 
 set -e
 
 echo "=========================================="
-echo "CDN Cache Purge Script"
+echo "Azure Front Door Cache Purge Script"
 echo "=========================================="
 
 # Colors for output
@@ -21,18 +21,18 @@ show_usage() {
     echo ""
     echo "Options:"
     echo "  -g, --resource-group    Resource group name (required)"
-    echo "  -p, --profile          CDN profile name (required)"
-    echo "  -e, --endpoint         CDN endpoint name (required)"
-    echo "  -f, --file             Specific file to purge (optional, can be used multiple times)"
-    echo "  -a, --all              Purge all content (use with caution)"
-    echo "  -h, --help             Show this help message"
+    echo "  -p, --profile           Front Door profile name (required)"
+    echo "  -e, --endpoint          Front Door endpoint name (required)"
+    echo "  -f, --file              Specific file to purge (optional, can be used multiple times)"
+    echo "  -a, --all               Purge all content (use with caution)"
+    echo "  -h, --help              Show this help message"
     echo ""
     echo "Examples:"
     echo "  # Purge specific files"
-    echo "  $0 -g mygroup -p mycdn -e myendpoint -f /documents/doc1.pdf -f /documents/doc2.pdf"
+    echo "  $0 -g mygroup -p myfd -e myendpoint -f /documents/doc1.pdf -f /documents/doc2.pdf"
     echo ""
     echo "  # Purge all content"
-    echo "  $0 -g mygroup -p mycdn -e myendpoint --all"
+    echo "  $0 -g mygroup -p myfd -e myendpoint --all"
     echo ""
     echo "  # Interactive mode (will prompt for values)"
     echo "  $0"
@@ -40,8 +40,8 @@ show_usage() {
 
 # Parse command line arguments
 RESOURCE_GROUP=""
-CDN_PROFILE=""
-CDN_ENDPOINT=""
+FD_PROFILE=""
+FD_ENDPOINT=""
 FILES_TO_PURGE=()
 PURGE_ALL=false
 
@@ -52,11 +52,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -p|--profile)
-            CDN_PROFILE="$2"
+            FD_PROFILE="$2"
             shift 2
             ;;
         -e|--endpoint)
-            CDN_ENDPOINT="$2"
+            FD_ENDPOINT="$2"
             shift 2
             ;;
         -f|--file)
@@ -80,19 +80,19 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Interactive mode if no arguments provided
-if [ -z "$RESOURCE_GROUP" ] || [ -z "$CDN_PROFILE" ] || [ -z "$CDN_ENDPOINT" ]; then
-    echo -e "${YELLOW}Enter CDN information:${NC}"
+if [ -z "$RESOURCE_GROUP" ] || [ -z "$FD_PROFILE" ] || [ -z "$FD_ENDPOINT" ]; then
+    echo -e "${YELLOW}Enter Front Door information:${NC}"
     
     if [ -z "$RESOURCE_GROUP" ]; then
         read -p "Resource Group Name: " RESOURCE_GROUP
     fi
     
-    if [ -z "$CDN_PROFILE" ]; then
-        read -p "CDN Profile Name: " CDN_PROFILE
+    if [ -z "$FD_PROFILE" ]; then
+        read -p "Front Door Profile Name: " FD_PROFILE
     fi
     
-    if [ -z "$CDN_ENDPOINT" ]; then
-        read -p "CDN Endpoint Name: " CDN_ENDPOINT
+    if [ -z "$FD_ENDPOINT" ]; then
+        read -p "Front Door Endpoint Name: " FD_ENDPOINT
     fi
     
     # Ask what to purge
@@ -117,22 +117,22 @@ if [ -z "$RESOURCE_GROUP" ] || [ -z "$CDN_PROFILE" ] || [ -z "$CDN_ENDPOINT" ]; 
     fi
 fi
 
-# Verify CDN endpoint exists
-echo -e "\n${YELLOW}Verifying CDN endpoint...${NC}"
-if az cdn endpoint show \
+# Verify Front Door endpoint exists
+echo -e "\n${YELLOW}Verifying Front Door endpoint...${NC}"
+if az afd endpoint show \
     --resource-group "$RESOURCE_GROUP" \
-    --profile-name "$CDN_PROFILE" \
-    --name "$CDN_ENDPOINT" >/dev/null 2>&1; then
-    echo -e "${GREEN}✓ CDN endpoint found${NC}"
+    --profile-name "$FD_PROFILE" \
+    --endpoint-name "$FD_ENDPOINT" >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ Front Door endpoint found${NC}"
 else
-    echo -e "${RED}✗ CDN endpoint not found${NC}"
+    echo -e "${RED}✗ Front Door endpoint not found${NC}"
     exit 1
 fi
 
 # Prepare content paths
 if [ "$PURGE_ALL" = true ]; then
     CONTENT_PATHS="/*"
-    echo -e "\n${YELLOW}WARNING: Purging ALL content from CDN cache${NC}"
+    echo -e "\n${YELLOW}WARNING: Purging ALL content from Front Door cache${NC}"
     read -p "Are you sure? (yes/no): " CONFIRM
     if [ "$CONFIRM" != "yes" ]; then
         echo "Purge cancelled"
@@ -142,7 +142,6 @@ elif [ ${#FILES_TO_PURGE[@]} -eq 0 ]; then
     echo -e "${RED}No files specified to purge${NC}"
     exit 1
 else
-    # Build content paths string
     CONTENT_PATHS=""
     for file in "${FILES_TO_PURGE[@]}"; do
         CONTENT_PATHS+="\"$file\" "
@@ -150,18 +149,17 @@ else
 fi
 
 # Execute purge
-echo -e "\n${YELLOW}Executing CDN purge...${NC}"
+echo -e "\n${YELLOW}Executing Front Door purge...${NC}"
 echo "Resource Group: $RESOURCE_GROUP"
-echo "CDN Profile: $CDN_PROFILE"
-echo "CDN Endpoint: $CDN_ENDPOINT"
+echo "Front Door Profile: $FD_PROFILE"
+echo "Front Door Endpoint: $FD_ENDPOINT"
 
 if [ "$PURGE_ALL" = true ]; then
     echo "Content Paths: /* (all content)"
-    
-    if az cdn endpoint purge \
+    if az afd endpoint purge \
         --resource-group "$RESOURCE_GROUP" \
-        --profile-name "$CDN_PROFILE" \
-        --name "$CDN_ENDPOINT" \
+        --profile-name "$FD_PROFILE" \
+        --endpoint-name "$FD_ENDPOINT" \
         --content-paths "/*" \
         --no-wait; then
         echo -e "${GREEN}✓ Purge initiated successfully${NC}"
@@ -174,12 +172,10 @@ else
     for file in "${FILES_TO_PURGE[@]}"; do
         echo "  - $file"
     done
-    
-    # Execute purge with specific files
-    if az cdn endpoint purge \
+    if az afd endpoint purge \
         --resource-group "$RESOURCE_GROUP" \
-        --profile-name "$CDN_PROFILE" \
-        --name "$CDN_ENDPOINT" \
+        --profile-name "$FD_PROFILE" \
+        --endpoint-name "$FD_ENDPOINT" \
         --content-paths ${FILES_TO_PURGE[@]} \
         --no-wait; then
         echo -e "${GREEN}✓ Purge initiated successfully${NC}"
@@ -192,7 +188,7 @@ fi
 echo -e "\n${YELLOW}Note:${NC}"
 echo "- Purge operations are asynchronous and may take a few minutes"
 echo "- Check purge status with:"
-echo "  az cdn endpoint show --resource-group $RESOURCE_GROUP --profile-name $CDN_PROFILE --name $CDN_ENDPOINT --query provisioningState"
+echo "  az afd endpoint show --resource-group $RESOURCE_GROUP --profile-name $FD_PROFILE --endpoint-name $FD_ENDPOINT --query provisioningState"
 echo ""
 echo "=========================================="
 echo -e "${GREEN}Purge request submitted!${NC}"

@@ -48,17 +48,17 @@ output "storage_account_primary_web_endpoint" {
 }
 
 output "cdn_endpoint_hostname" {
-  description = "Hostname of the CDN endpoint"
+  description = "Hostname of the AFD endpoint"
   value       = module.document_hosting.cdn_endpoint_hostname
 }
 
 output "cdn_endpoint_url" {
-  description = "Full URL of the CDN endpoint"
+  description = "Full URL of the AFD endpoint"
   value       = module.document_hosting.cdn_endpoint_url
 }
 
 output "document_access_url_pattern" {
-  description = "URL pattern for accessing documents via CDN"
+  description = "URL pattern for accessing documents via AFD"
   value       = module.document_hosting.document_access_url_pattern
 }
 
@@ -73,9 +73,9 @@ output "custom_domain_url" {
   value       = module.document_hosting.custom_domain_url
 }
 
-output "custom_domain_cname_record" {
-  description = "CNAME record needed for custom domain validation"
-  value       = module.document_hosting.custom_domain_cname_record
+output "custom_domain_resource_id" {
+  description = "Resource ID of the AFD custom domain if configured"
+  value       = module.document_hosting.custom_domain_resource_id
 }
 
 # Formatted outputs for convenience
@@ -139,12 +139,12 @@ output "document_upload_instructions" {
     
     3. Access documents via:
        - Direct Storage: ${module.document_hosting.storage_account_primary_blob_endpoint}${module.document_hosting.storage_container_name}/<filename>
-       - CDN URL: ${module.document_hosting.cdn_endpoint_url}/${module.document_hosting.storage_container_name}/<filename>
+       - AFD URL: ${module.document_hosting.cdn_endpoint_url}/${module.document_hosting.storage_container_name}/<filename>
        ${var.custom_domain_name != "" ? "- Custom Domain: ${module.document_hosting.custom_domain_url}/${module.document_hosting.storage_container_name}/<filename>" : ""}
        
     Note: 
-    - CDN propagation can take 5-10 minutes for new content
-    - Custom domains require DNS CNAME configuration to validate
+    - Edge propagation can take a few minutes for new content
+    - Custom domains require Azure DNS configuration
     
     4. Test the deployment:
        Run the test script from the module directory:

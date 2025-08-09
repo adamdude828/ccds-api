@@ -50,6 +50,16 @@ Route::middleware([ValidateAzureToken::class])->group(function () {
     Route::post('videos/upload_complete', [VideoController::class, 'UploadComplete']);
     Route::post('videos/mass_update', [VideoController::class, 'updateMeta']);
 
+    // PDF routes
+    Route::get('pdfs', [\App\Http\Controllers\PdfController::class, 'index']);
+    Route::post('pdfs', [\App\Http\Controllers\PdfController::class, 'store']);
+    Route::get('pdfs/{pdf}', [\App\Http\Controllers\PdfController::class, 'show']);
+    Route::post('pdfs/{pdf}', [\App\Http\Controllers\PdfController::class, 'update']);
+    Route::delete('pdfs/{pdf}', [\App\Http\Controllers\PdfController::class, 'destroy']);
+
+    // Purge status route
+    Route::get('purges/{id}', [\App\Http\Controllers\PurgeController::class, 'show']);
+
     // Legacy JWT auth routes (for backward compatibility during transition)
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);

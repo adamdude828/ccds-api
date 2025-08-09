@@ -64,17 +64,23 @@ variable "storage_replication_type" {
 }
 
 variable "cdn_sku" {
-  description = "CDN Profile SKU"
+  description = "AFD Profile SKU"
   type        = string
-  default     = "Standard_Microsoft"
+  default     = "Standard_AzureFrontDoor"
   validation {
-    condition     = contains(["Standard_Microsoft", "Standard_Akamai", "Standard_Verizon", "Premium_Verizon"], var.cdn_sku)
-    error_message = "CDN SKU must be one of: Standard_Microsoft, Standard_Akamai, Standard_Verizon, Premium_Verizon"
+    condition     = contains(["Standard_AzureFrontDoor", "Premium_AzureFrontDoor"], var.cdn_sku)
+    error_message = "AFD SKU must be one of: Standard_AzureFrontDoor, Premium_AzureFrontDoor"
   }
 }
 
 variable "custom_domain_name" {
-  description = "Custom domain name for CDN document hosting"
+  description = "Custom domain name for AFD document hosting"
+  type        = string
+  default     = ""
+}
+
+variable "dns_zone_id" {
+  description = "Resource ID of the Azure DNS zone hosting the custom domain"
   type        = string
   default     = ""
 }
