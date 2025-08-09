@@ -1,0 +1,37 @@
+# Example Terraform Variables File
+# Copy this file to terraform.tfvars and fill in your values
+
+# General Configuration
+environment  = "dev"
+project_name = "do-git-mis-next"
+
+# Application URLs - Update these based on your deployment
+app_url           = "http://localhost:3000"                              # Main application URL
+redirect_uris     = ["http://localhost:3000/api/auth/callback/azure-ad"]  # OAuth redirect URIs for web platform
+spa_redirect_uris = ["http://localhost:3000/", "http://localhost:3000/dashboard"] # OAuth redirect URIs for SPA platform
+
+# Client Secret Configuration
+client_secret_expiration_days = 90
+enable_secret_rotation        = false
+
+# Document Hosting Configuration
+location                 = "East US"                    # Azure region
+storage_replication_type = "LRS"                        # LRS, GRS, RAGRS, ZRS, GZRS, RAGZRS
+cdn_sku                  = "Standard_AzureFrontDoor"    # or "Premium_AzureFrontDoor"
+
+# Optional custom domain (requires Azure DNS zone)
+custom_domain_name = ""                                 # e.g. "documents.example.com"
+# "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/dnsZones/example.com"
+dns_zone_id        = ""
+
+# Production recommendations:
+# storage_replication_type = "GRS"
+# cdn_sku                  = "Premium_AzureFrontDoor"
+# custom_domain_name       = "documents.example.com"
+# dns_zone_id              = "/subscriptions/.../dnsZones/example.com"
+
+# Provider env vars (recommended before plan/apply):
+# export ARM_SUBSCRIPTION_ID="<subscription>"
+# export ARM_TENANT_ID="<tenant>"
+# export ARM_CLIENT_ID="<appId>"
+# export ARM_CLIENT_SECRET="<secret>"
