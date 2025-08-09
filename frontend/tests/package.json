@@ -1,0 +1,20 @@
+{
+  "name": "do-git-mkt-reviews-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for the Marketing Reviews app",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "clear-auth": "node scripts/clear-auth.js",
+    "test:auth": "playwright test auth.setup.ts",
+    "test:fresh": "npm run clear-auth && npm run test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^20",
+    "dotenv": "^16.4.7"
+  }
+} 

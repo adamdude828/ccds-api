@@ -1,0 +1,94 @@
+# Azure DevOps Pipeline for running Jest tests with coverage on Pull Requests
+trigger: none  # Disable CI triggers (only run on PRs)
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - '*.md'
+      - 'docs/*'
+      - '.gitignore'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  NODE_VERSION: '18.x'
+  NPM_CACHE_FOLDER: $(Pipeline.Workspace)/.npm
+
+stages:
+  - stage: Test
+    displayName: 'Test and Coverage'
+    jobs:
+      - job: RunTests
+        displayName: 'Run Jest Tests with Coverage'
+        steps:
+          # Use Node.js version
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          # Cache npm dependencies
+          - task: Cache@2
+            displayName: 'Cache npm dependencies'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: $(NPM_CACHE_FOLDER)
+              cacheHitVar: 'CacheRestored'
+
+          # Configure npm
+          - script: |
+              npm config set cache $(NPM_CACHE_FOLDER) --global
+            displayName: 'Configure npm cache'
+
+          # Set up .npmrc from template
+          - script: |
+              cp .npmrc.template .npmrc
+              sed -i 's/{{AZURE_PAT_BASE64}}/$(AZURE_PAT_BASE64)/g' .npmrc
+            displayName: 'Setup .npmrc from template'
+            env:
+              AZURE_PAT_BASE64: $(AZURE_PAT_BASE64)
+
+          # Install dependencies
+          - script: |
+              npm ci
+            displayName: 'Install dependencies'
+
+          # Run tests with coverage
+          - script: |
+              npm run test:ci
+            displayName: 'Run tests with coverage'
+            continueOnError: false
+
+          # Publish test results (if using jest-junit)
+          - task: PublishTestResults@2
+            displayName: 'Publish test results'
+            condition: always()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/junit.xml'
+              searchFolder: '$(System.DefaultWorkingDirectory)'
+              failTaskOnFailedTests: true
+
+          # Publish code coverage results
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish code coverage'
+            condition: always()
+            inputs:
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
+              pathToSources: '$(System.DefaultWorkingDirectory)/src'
+              failIfCoverageEmpty: true
+
+          # Upload coverage directory as artifact (optional)
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish coverage artifacts'
+            condition: always()
+            inputs:
+              PathtoPublish: '$(System.DefaultWorkingDirectory)/coverage'
+              ArtifactName: 'coverage-reports'
+              publishLocation: 'Container'

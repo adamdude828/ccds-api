@@ -1,0 +1,27 @@
+# Test results and reports
+test-results/
+playwright-report/
+blob-report/
+
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+!.env.template
+
+
+# Playwright browser data
+.auth/
+
+# Screenshots and videos
+**/screenshots/
+**/videos/
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+*.log 
