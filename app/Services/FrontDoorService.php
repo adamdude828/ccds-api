@@ -66,6 +66,14 @@ class FrontDoorService
         ]);
         $purge->save();
 
+        return $this->initiate($purge);
+    }
+
+    /**
+     * Initiate purge for an existing CdnPurge record (queue-friendly).
+     */
+    public function initiate(CdnPurge $purge): CdnPurge
+    {
         $token = $this->getAccessToken();
         $path  = sprintf(
             'subscriptions/%s/resourceGroups/%s/providers/Microsoft.Cdn/profiles/%s/afdEndpoints/%s/purge?api-version=2023-05-01',
@@ -81,7 +89,7 @@ class FrontDoorService
                 'Content-Type'  => 'application/json',
             ],
             'json' => [
-                'contentPaths' => array_values($paths),
+                'contentPaths' => array_values($purge->paths ?? []),
             ],
         ]);
 

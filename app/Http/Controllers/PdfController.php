@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\FrontDoor\InitiatePurge;
 use App\Jobs\FrontDoor\TrackPurgeStatus;
 use App\Models\CdnPurge;
 use App\Models\Pdf;
@@ -39,7 +40,7 @@ class PdfController extends Controller
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'file'  => ['required', 'file', 'mimetypes:application/pdf', 'max:51200'], // 50MB
+            'file'  => ['required', 'file', 'mimetypes:application/pdf', 'max:51200'],
         ]);
 
         $file = $data['file'];
@@ -63,7 +64,7 @@ class PdfController extends Controller
         return response()->json($pdf, 201);
     }
 
-    public function update(Request $request, Pdf $pdf, FrontDoorService $fd)
+    public function update(Request $request, Pdf $pdf)
     {
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
@@ -76,7 +77,6 @@ class PdfController extends Controller
             $file = $data['file'];
             $disk = Storage::disk('azure-documents');
 
-            // Overwrite existing blob to keep the same path
             $disk->put($pdf->path, file_get_contents($file->getRealPath()), [
                 'visibility' => 'public',
                 'mimetype'   => 'application/pdf',
@@ -95,8 +95,12 @@ class PdfController extends Controller
 
         $purge = null;
         if (!empty($pathsToPurge)) {
-            $purge = $fd->purge($pathsToPurge);
-            TrackPurgeStatus::dispatch($purge)->delay(now()->addSeconds(10));
+            $purge = CdnPurge::create([
+                'paths' => $pathsToPurge,
+                'status' => 'pending',
+                'provider' => 'frontdoor',
+            ]);
+            InitiatePurge::dispatch($purge);
         }
 
         return response()->json([
@@ -105,14 +109,18 @@ class PdfController extends Controller
         ]);
     }
 
-    public function destroy(Pdf $pdf, FrontDoorService $fd)
+    public function destroy(Pdf $pdf)
     {
         $path = '/' . ltrim($pdf->path, '/');
         Storage::disk('azure-documents')->delete($pdf->path);
         $pdf->delete();
 
-        $purge = $fd->purge([$path]);
-        TrackPurgeStatus::dispatch($purge)->delay(now()->addSeconds(10));
+        $purge = CdnPurge::create([
+            'paths' => [$path],
+            'status' => 'pending',
+            'provider' => 'frontdoor',
+        ]);
+        InitiatePurge::dispatch($purge);
 
         return response()->json([
             'message' => 'Deleted',
