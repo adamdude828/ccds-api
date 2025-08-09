@@ -49,12 +49,22 @@ output "document_access_url_pattern" {
 # Custom Domain Outputs
 output "custom_domain_hostname" {
   description = "Custom domain hostname if configured"
-  value       = var.custom_domain_name != "" && var.dns_zone_id != "" ? var.custom_domain_name : null
+  value       = var.custom_domain_name != "" ? var.custom_domain_name : null
 }
 
 output "custom_domain_url" {
   description = "Full URL of the custom domain if configured"
-  value       = var.custom_domain_name != "" && var.dns_zone_id != "" ? "https://${var.custom_domain_name}" : null
+  value       = var.custom_domain_name != "" ? "https://${var.custom_domain_name}" : null
+}
+
+output "custom_domain_validation_token" {
+  description = "Domain validation token for external DNS providers (like Digital Ocean)"
+  value       = length(azurerm_cdn_frontdoor_custom_domain.documents) > 0 ? azurerm_cdn_frontdoor_custom_domain.documents[0].validation_token : null
+}
+
+output "afd_endpoint_hostname" {
+  description = "AFD endpoint hostname for CNAME record creation"
+  value       = azurerm_cdn_frontdoor_endpoint.documents.host_name
 }
 
 output "custom_domain_resource_id" {
