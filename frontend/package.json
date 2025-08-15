@@ -23,13 +23,11 @@
     "@azure/msal-react": "^2.2.0",
     "@challenger-school/do-git-mis-components-storybook": "^1.12.1",
     "@types/papaparse": "^5.3.15",
-    "@types/video.js": "^7.3.58",
     "next": "15.3.2",
     "papaparse": "^5.5.2",
     "react": "^18",
     "react-dom": "^18",
-    "react-icons": "^5.4.0",
-    "video.js": "^8.23.3"
+    "react-icons": "^5.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

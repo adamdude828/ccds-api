@@ -17,7 +17,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CCDS - Document Management System",
+  title: "Next.js Template",
   description: "A Next.js template with Microsoft authentication and Challenger components",
 };
 

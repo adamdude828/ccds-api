@@ -5,7 +5,12 @@ export const msalConfig: Configuration = {
   auth: {
     clientId: process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || '',
     authority: `https://login.microsoftonline.com/${process.env.NEXT_PUBLIC_AZURE_TENANT_ID || ''}`,
-    redirectUri: process.env.NODE_ENV === 'development' ? "http://localhost:3000" : `${process.env.NEXT_PUBLIC_APP_URL}`,
+    redirectUri: process.env.NODE_ENV === 'development' ? `http://localhost:3000${process.env.NEXT_PUBLIC_REDIRECT_PATH || '/videos'}` : `${process.env.NEXT_PUBLIC_APP_URL}${process.env.NEXT_PUBLIC_REDIRECT_PATH || '/videos'}`,
+    // Prevent MSAL from navigating back to the original request URL after login,
+    // which can cause loops in some Next.js routing setups
+    navigateToLoginRequestUrl: false,
+    // Ensure logout returns to the app origin to avoid loops
+    postLogoutRedirectUri: process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.NEXT_PUBLIC_APP_URL,
   },
   cache: {
     cacheLocation: "sessionStorage",

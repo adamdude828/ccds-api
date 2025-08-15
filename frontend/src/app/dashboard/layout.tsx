@@ -61,7 +61,8 @@ export default function DashboardLayout({
       interactionType={InteractionType.Redirect}
       authenticationRequest={authRequest}
       errorComponent={() => {
-        return <div>Authentication required. Redirecting to login...</div>;
+        router.push('/');
+        return <div>Redirecting to login...</div>;
       }}
       loadingComponent={() => <div>Loading...</div>}
     >

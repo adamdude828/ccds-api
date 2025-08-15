@@ -1,0 +1,94 @@
+[
+  {
+    "session_id": "6012930e-cf2a-481f-b53d-695e4a574d20",
+    "name": "This is jsut a test task. Add 'I am batman' to the readme. ",
+    "command": [
+      "claude",
+      "This is jsut a test task. Add 'I am batman' to the readme. "
+    ],
+    "created_at": "2025-05-23T22:22:30.165646",
+    "status": "pending",
+    "container_id": null
+  },
+  {
+    "session_id": "dbdcb1a2-53cc-4b94-8a1f-3ad7c0bec825",
+    "name": "this is just a test task. Add 'I am batman' to the readme file",
+    "command": [
+      "claude",
+      "this is just a test task. Add 'I am batman' to the readme file"
+    ],
+    "created_at": "2025-05-23T22:29:38.894320",
+    "status": "completed",
+    "container_id": null
+  },
+  {
+    "session_id": "e5ffb09f-ae38-4c3d-818c-0bac5b7278bf",
+    "name": "task_ae512d55",
+    "command": [
+      "claude",
+      "Add 'I am batman' to the readme file"
+    ],
+    "created_at": "2025-05-23T22:34:30.725182",
+    "status": "pending",
+    "container_id": null
+  },
+  {
+    "session_id": "ae512d55-842e-43f8-8794-a1f12765b25f",
+    "name": "task_ae512d55",
+    "command": [
+      "claude",
+      "Add 'I am batman' to the readme file"
+    ],
+    "created_at": "2025-05-23T22:34:30.725182",
+    "status": "running",
+    "container_id": null
+  },
+  {
+    "session_id": "07c3f41d-d2c3-406f-8bbb-b0643a679f58",
+    "name": "session_20250523_225742",
+    "command": [],
+    "created_at": "2025-05-23T22:57:42.995577",
+    "status": "failed",
+    "container_id": null
+  },
+  {
+    "session_id": "63a97ecd-a1f1-4765-a2c8-1a64f0da7403",
+    "name": "session_20250523_225750",
+    "command": [
+      "ls -la"
+    ],
+    "created_at": "2025-05-23T22:57:50.393460",
+    "status": "running",
+    "container_id": "87cf252bbecd3f5fd570d4c5ed3bb1dc1ea1b25d8ceafcb8ca9bf07f1120315d"
+  },
+  {
+    "session_id": "0333f046-580f-4304-a503-8270e1b24181",
+    "name": "session_20250523_225810",
+    "command": [
+      "claude --model=opus -p 'hello'"
+    ],
+    "created_at": "2025-05-23T22:58:10.722906",
+    "status": "completed",
+    "container_id": "1344475a13531a25a1b1d2c8fca1561ec036673782c942ed94df51d8cd22da33"
+  },
+  {
+    "session_id": "2946f518-3f6a-4efd-86e6-bd3656c0f963",
+    "name": "session_20250524_065436",
+    "command": [
+      "claude --version"
+    ],
+    "created_at": "2025-05-24T06:54:36.318866",
+    "status": "running",
+    "container_id": "87181c364172dffaffe307388b2667b38b557f8c9e957be686ab51a5d276e782"
+  },
+  {
+    "session_id": "2698090a-72ac-4c23-b3aa-ca1d2b9df8f0",
+    "name": "session_20250524_070942",
+    "command": [
+      "claude --version"
+    ],
+    "created_at": "2025-05-24T07:09:42.834365",
+    "status": "running",
+    "container_id": "aa12c9d217a2d29b71e525a8e68e21029b341e49aae2f97a801e9d49585a25a0"
+  }
+]

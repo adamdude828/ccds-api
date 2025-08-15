@@ -27,6 +27,12 @@ variable "spa_redirect_uris" {
   default     = ["http://localhost:3000"]
 }
 
+variable "primary_redirect_path" {
+  description = "Primary redirect path for MSAL authentication (e.g., '/videos', '/dashboard')"
+  type        = string
+  default     = "/videos"
+}
+
 variable "client_secret_expiration_days" {
   description = "Number of days until the client secret expires"
   type        = number

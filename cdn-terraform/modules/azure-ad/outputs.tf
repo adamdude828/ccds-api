@@ -45,6 +45,11 @@ output "spa_redirect_uris" {
   value       = var.spa_redirect_uris
 }
 
+output "primary_redirect_path" {
+  description = "The primary redirect path for MSAL authentication"
+  value       = var.primary_redirect_path
+}
+
 output "service_principal_id" {
   description = "The Service Principal ID (Enterprise Application ID)"
   value       = azuread_service_principal.main.id

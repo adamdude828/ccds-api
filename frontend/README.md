@@ -80,8 +80,8 @@ This template uses Microsoft Authentication Library (MSAL) for Azure AD authenti
 1. **Register an application** in Azure AD:
    - Go to [Azure Portal](https://portal.azure.com) → Azure Active Directory → App registrations
    - Click "New registration"
-   - Set redirect URI: `http://localhost:3000/dashboard` (for development)
-   - For production, add your production URL: `https://your-domain.com/dashboard`
+   - Set redirect URI: `http://localhost:3000/videos` (for development)
+   - For production, add your production URL: `https://your-domain.com/videos`
 
 2. **Configure authentication**:
    - Enable "ID tokens" under Authentication → Implicit grant
@@ -102,8 +102,8 @@ export const msalConfig: Configuration = {
     clientId: process.env.NEXT_PUBLIC_AZURE_CLIENT_ID || '',
     authority: `https://login.microsoftonline.com/${process.env.NEXT_PUBLIC_AZURE_TENANT_ID}`,
     redirectUri: process.env.NODE_ENV === 'development' 
-      ? "http://localhost:3000/dashboard" 
-      : `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      ? `http://localhost:3000${process.env.NEXT_PUBLIC_REDIRECT_PATH || '/videos'}` 
+      : `${process.env.NEXT_PUBLIC_APP_URL}${process.env.NEXT_PUBLIC_REDIRECT_PATH || '/videos'}`,
   },
   cache: {
     cacheLocation: "sessionStorage",
@@ -114,47 +114,58 @@ export const msalConfig: Configuration = {
 
 ### Protected Routes
 
-The dashboard and its sub-routes are protected by default. The authentication flow:
+The application routes are protected by default. The authentication flow:
 1. User visits the app → redirected to Microsoft login
-2. After successful login → redirected to `/dashboard`
+2. After successful login → redirected to `/videos` (configurable via `NEXT_PUBLIC_REDIRECT_PATH`)
 3. Session stored in browser storage
 4. Automatic token refresh
 
-## Azure AD App Registration with Terraform
+## Environment Variables
 
-This template includes Terraform configuration to automatically create and manage your Azure AD application registration.
+The application uses environment variables for configuration. Create a `.env.local` file in the root directory:
 
-### Quick Setup
+```env
+# Required for authentication
+NEXT_PUBLIC_AZURE_CLIENT_ID=your-client-id
+NEXT_PUBLIC_AZURE_TENANT_ID=your-tenant-id
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_REDIRECT_PATH=/videos
 
-1. **Bootstrap Terraform for your environment**:
+# Optional
+NEXT_PUBLIC_API_URL=your-api-url
+NEXT_PUBLIC_USE_TEST_AUTH=false
+```
+
+### Configuration Details
+
+- `NEXT_PUBLIC_AZURE_CLIENT_ID`: Your Azure AD application (client) ID
+- `NEXT_PUBLIC_AZURE_TENANT_ID`: Your Azure AD tenant (directory) ID  
+- `NEXT_PUBLIC_APP_URL`: The base URL of your application
+- `NEXT_PUBLIC_REDIRECT_PATH`: The path to redirect to after authentication (default: `/videos`)
+- `NEXT_PUBLIC_API_URL`: URL of your backend API (if applicable)
+- `NEXT_PUBLIC_USE_TEST_AUTH`: Set to `true` to use mock authentication for testing
+
+## Getting Started
+
+1. **Install dependencies**:
    ```bash
-   ./scripts/bootstrap-terraform-simple.sh -e dev
+   npm install
    ```
 
-2. **Create the Azure AD Application**:
+2. **Set up Azure PAT for component library**:
    ```bash
-   cd terraform/environments/dev
-   ./init.sh
-   terraform plan
-   terraform apply
+   npm run setup-npmrc
+   # Enter your Azure DevOps PAT when prompted
    ```
 
-3. **Get your configuration**:
+3. **Create your `.env.local` file** with your Azure AD configuration
+
+4. **Start development server**:
    ```bash
-   # Display all configuration details
-   terraform output nextauth_configuration
-   
-   # Get just the client secret
-   terraform output -raw client_secret
+   npm run dev
    ```
 
-The Terraform setup will:
-- Create an Azure AD application with the correct redirect URIs
-- Generate a client secret with 90-day expiration
-- Configure the required Microsoft Graph permissions
-- Output all the environment variables you need
-
-See the [Terraform README](terraform/README.md) for detailed instructions on managing secrets, rotation, and production configuration.
+The application will be available at `http://localhost:3000`. When you visit it, you'll be redirected to Microsoft for authentication, then back to `/videos` (or your configured redirect path).
 
 ## Challenger Component Library
 

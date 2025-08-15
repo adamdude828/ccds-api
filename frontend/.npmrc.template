@@ -1,0 +1,9 @@
+//localhost:4873/:_authToken="{{AZURE_PAT_BASE64}}"
+//pkgs.dev.azure.com/ChallengerSchoolDevOps/2238f557-2e7a-4dae-875d-822e40251be1/_packaging/challenger-school/npm/registry/:username=ChallengerSchoolDevOps
+//pkgs.dev.azure.com/ChallengerSchoolDevOps/2238f557-2e7a-4dae-875d-822e40251be1/_packaging/challenger-school/npm/registry/:_password="{{AZURE_PAT_BASE64}}"
+//pkgs.dev.azure.com/ChallengerSchoolDevOps/2238f557-2e7a-4dae-875d-822e40251be1/_packaging/challenger-school/npm/registry/:email=npm requires email to be set but doesn't use the value
+//pkgs.dev.azure.com/ChallengerSchoolDevOps/2238f557-2e7a-4dae-875d-822e40251be1/_packaging/challenger-school/npm/:username=ChallengerSchoolDevOps
+//pkgs.dev.azure.com/ChallengerSchoolDevOps/2238f557-2e7a-4dae-875d-822e40251be1/_packaging/challenger-school/npm/:_password="{{AZURE_PAT_BASE64}}"
+//pkgs.dev.azure.com/ChallengerSchoolDevOps/2238f557-2e7a-4dae-875d-822e40251be1/_packaging/challenger-school/npm/:email=npm requires email to be set but doesn't use the value
+@challenger-school:registry=https://pkgs.dev.azure.com/ChallengerSchoolDevOps/2238f557-2e7a-4dae-875d-822e40251be1/_packaging/challenger-school/npm/registry/
+registry=https://registry.npmjs.org/

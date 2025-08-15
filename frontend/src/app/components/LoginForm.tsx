@@ -16,24 +16,9 @@ export default function LoginForm() {
     
     // Don't attempt login if there's already an interaction in progress
     if (inProgress !== InteractionStatus.None) {
-      console.log('Interaction in progress:', inProgress);
-      
-      // If it's a startup interaction, try to clear it
-      if (inProgress === InteractionStatus.Startup) {
-        try {
-          // Try to handle any pending redirects first
-          const result = await instance.handleRedirectPromise();
-          if (!result) {
-            // No redirect to handle, proceed with login
-            console.log('No redirect to handle, proceeding with login');
-          }
-        } catch (err) {
-          console.log('Error handling redirect, proceeding anyway:', err);
-        }
-      } else {
-        setIsLoggingIn(false);
-        return;
-      }
+      console.log('Interaction in progress, skipping login attempt');
+      setIsLoggingIn(false);
+      return;
     }
 
     try {
@@ -49,7 +34,7 @@ export default function LoginForm() {
       });
       
       console.log("Initiating login redirect...");
-      router.prefetch('/videos');
+      router.prefetch(process.env.NEXT_PUBLIC_REDIRECT_PATH || '/videos');
     } catch (error) {
       console.error("Login failed:", error);
       if (error instanceof Error) {

@@ -9,6 +9,7 @@ module "azure_ad" {
   app_url                       = var.app_url
   redirect_uris                 = var.redirect_uris
   spa_redirect_uris             = var.spa_redirect_uris
+  primary_redirect_path         = var.primary_redirect_path
   client_secret_expiration_days = var.client_secret_expiration_days
   enable_secret_rotation        = var.enable_secret_rotation
 }

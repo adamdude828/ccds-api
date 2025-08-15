@@ -6,11 +6,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import { JSX, ReactNode, useEffect } from 'react';
 import { PageTemplate } from '@challenger-school/do-git-mis-components-storybook';
 import { useState } from 'react';
-import { MdVideoLibrary, MdDescription } from 'react-icons/md';
 
 const navItems = [
-  { id: 'videos', icon: <MdVideoLibrary />, label: 'Videos' },
-  { id: 'documents', icon: <MdDescription />, label: 'Documents' },
+  { id: 'videos', icon: '🎥', label: 'Videos' },
+  { id: 'dashboard', icon: '▶', label: 'Dashboard' },
+  { id: 'documents', icon: '📄', label: 'Documents' },
 ];
 
 const authRequest = {
@@ -26,18 +26,24 @@ export default function VideosLayout({
   const pathname = usePathname();
   const { instance } = useMsal();
   const [activeItem, setActiveItem] = useState(() => {
-    const path = pathname?.split('/')[1] || 'videos';
+    const path = pathname?.split('/')[2] || 'videos';
     return path;
   });
 
   useEffect(() => {
-    const path = pathname?.split('/')[1] || 'videos';
+    const path = pathname?.split('/')[2] || 'videos';
     setActiveItem(path);
   }, [pathname]);
 
   const handleNavItemClick = (itemId: string) => {
     setActiveItem(itemId);
-    router.push(`/${itemId}`);
+    if (itemId === 'dashboard') {
+      router.push('/dashboard');
+    } else if (itemId === 'documents') {
+      router.push('/documents');
+    } else {
+      router.push(`/videos/${itemId === 'videos' ? '' : itemId}`);
+    }
   };
 
   const handleLogout = async () => {
@@ -58,12 +64,13 @@ export default function VideosLayout({
       interactionType={InteractionType.Redirect}
       authenticationRequest={authRequest}
       errorComponent={() => {
-        return <div>Authentication required. Redirecting to login...</div>;
+        router.push('/');
+        return <div>Redirecting to login...</div>;
       }}
       loadingComponent={() => <div>Loading...</div>}
     >
       <PageTemplate
-        projectName="CCDS"
+        projectName="Video Manager"
         navItems={navItems}
         activeItemId={activeItem}
         onNavItemClick={handleNavItemClick}

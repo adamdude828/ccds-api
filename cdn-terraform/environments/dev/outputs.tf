@@ -86,6 +86,7 @@ output "environment_variables" {
     NEXT_PUBLIC_AZURE_TENANT_ID     = module.azure_ad.tenant_id
     AZURE_AD_CLIENT_SECRET          = module.azure_ad.client_secret
     NEXT_PUBLIC_APP_URL             = var.app_url
+    NEXT_PUBLIC_REDIRECT_PATH       = module.azure_ad.primary_redirect_path
     NEXTAUTH_SECRET                 = "Generate a random string for production"
     NEXTAUTH_URL                    = var.app_url
   }
@@ -103,6 +104,7 @@ output "nextauth_configuration" {
     NEXT_PUBLIC_AZURE_CLIENT_ID=${module.azure_ad.application_id}
     NEXT_PUBLIC_AZURE_TENANT_ID=${module.azure_ad.tenant_id}
     NEXT_PUBLIC_APP_URL=${var.app_url}
+    NEXT_PUBLIC_REDIRECT_PATH=${module.azure_ad.primary_redirect_path}
     AZURE_AD_CLIENT_SECRET=<see terraform output -raw client_secret>
     
     NEXTAUTH_URL=${var.app_url}

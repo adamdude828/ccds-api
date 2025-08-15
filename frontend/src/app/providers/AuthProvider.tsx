@@ -38,12 +38,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const initializeMsal = async () => {
       try {
-        // Get the existing initialization promise (already started in getMsalInstance)
-        const initPromise = getMsalInitPromise();
-        if (initPromise) {
-          await initPromise;
-          console.log("MSAL initialized successfully");
-        }
+        const instance = getMsalInstance();
+        await instance.initialize();
+        console.log("MSAL initialized successfully");
         setInitialized(true);
       } catch (error) {
         if (error instanceof BrowserAuthError) {

@@ -29,6 +29,17 @@ Route::middleware([ValidateAzureToken::class])->group(function () {
         return $request->user();
     });
 
+    // Auth check endpoint for frontend authentication verification
+    Route::get('/auth-check', function (Request $request) {
+        // If we reach this point, the ValidateAzureToken middleware has passed
+        return response()->json([
+            'authenticated' => true,
+            'authorized' => true, // User has valid Azure token and passed middleware
+            'user' => $request->user(),
+            'timestamp' => now()->toIso8601String()
+        ]);
+    });
+
     // Azure role sync
     Route::post('auth/azure/sync-roles', [AzureRoleSyncController::class, 'syncRoles']);
 

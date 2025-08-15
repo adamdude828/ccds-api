@@ -20,6 +20,7 @@ npm run setup-npmrc
 NEXT_PUBLIC_AZURE_CLIENT_ID=your-client-id
 NEXT_PUBLIC_AZURE_TENANT_ID=your-tenant-id
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_REDIRECT_PATH=/videos
 
 # Optional
 NEXT_PUBLIC_API_URL=your-api-url
@@ -28,7 +29,7 @@ NEXT_PUBLIC_USE_TEST_AUTH=false
 
 ### 3. Azure AD App Registration Checklist
 - [ ] Create new app registration in Azure Portal
-- [ ] Add redirect URI: `http://localhost:3000/dashboard`
+- [ ] Add redirect URI: `http://localhost:3000/videos`
 - [ ] Enable ID tokens
 - [ ] Copy Client ID and Tenant ID to `.env.local`
 - [ ] For production: Add production redirect URI
@@ -43,7 +44,8 @@ npm run dev
 ### Microsoft Authentication (MSAL)
 - Pre-configured in `src/app/config/authConfig.ts`
 - Auth providers in `src/app/providers/`
-- Protected routes under `/dashboard`
+- Protected routes under `/videos`, `/documents`, `/dashboard`
+- Configurable redirect path via `NEXT_PUBLIC_REDIRECT_PATH`
 - Automatic token management
 
 ### Challenger Component Library
@@ -68,10 +70,12 @@ npm run lint        # Run linter
 
 ## 📚 Key Files to Customize
 1. `src/app/page.tsx` - Home page
-2. `src/app/dashboard/page.tsx` - Main dashboard
-3. `src/app/layout.tsx` - Root layout
-4. `tailwind.config.ts` - Add custom styles
-5. `public/` - Add your logos/assets
+2. `src/app/videos/page.tsx` - Videos landing page (default redirect)
+3. `src/app/dashboard/page.tsx` - Dashboard page
+4. `src/app/documents/page.tsx` - Documents page
+5. `src/app/layout.tsx` - Root layout
+6. `tailwind.config.ts` - Add custom styles
+7. `public/` - Add your logos/assets
 
 ## 🆘 Quick Troubleshooting
 - **Can't install packages**: Check `.npmrc` and Azure PAT
